@@ -1,0 +1,50 @@
+// SQLite για MVP (μηδέν infra). Μετάβαση σε Supabase/Postgres στη Φάση 4:
+// αλλάζεις provider -> "postgresql" + DATABASE_URL, και τα Json[] παραμένουν.
+// Σημείωση: στο SQLite τα array-πεδία αποθηκεύονται ως JSON string (βλ. db.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./espa.db"
+}
+
+model Call {
+  id            String   @id
+  source        String
+  sourceId      String
+  title         String
+  programFamily String?
+  summary       String?
+
+  status        String   @default("UNKNOWN")
+
+  // αποθηκεύονται ως JSON-encoded strings (helpers στο db.ts)
+  beneficiaryTypes String @default("[]")
+  themes           String @default("[]")
+  geography        String @default("[]")
+  aidTypes         String @default("[]")
+  eligibleKad      String @default("[]")
+  excludedKad      String @default("[]")
+  docUrls          String @default("[]")
+
+  budgetMin     Float?
+  budgetMax     Float?
+  aidIntensityPct Float?
+  totalFund     Float?
+
+  opensAt       String?
+  deadline      String?
+
+  officialUrl   String
+  rawHash       String
+
+  firstSeen     DateTime @default(now())
+  lastSeen      DateTime @updatedAt
+
+  @@unique([source, sourceId])
+  @@index([status])
+  @@index([source])
+}
