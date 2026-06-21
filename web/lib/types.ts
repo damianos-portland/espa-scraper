@@ -41,10 +41,28 @@ export interface Match {
   reasons: string[];
 }
 
+export interface Tender {
+  id: string;
+  source: "diavgeia";
+  title: string;
+  org: string;
+  orgId: string;
+  contractType: string;
+  cpv: string[];
+  amount?: number | null;
+  currency?: string;
+  criterion?: string;
+  procedure?: string;
+  issueDate: string;
+  documentUrl: string;
+  decisionUrl: string;
+}
+
 export interface Dataset {
   generatedAt: string;
-  stats: { total: number; open: number; bySource: Record<string, number> };
+  stats: { total: number; open: number; bySource: Record<string, number>; tenders: number };
   profiles: Profile[];
   calls: FundingCall[];
   matches: Record<string, Match[]>;
+  tenders: Tender[];
 }

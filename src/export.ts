@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 import { prisma, rowToCall } from "./db.js";
 import { PROFILES } from "./profiles.js";
 import { rankForProfile } from "./matching.js";
+import { fetchTenders, type Tender } from "./tenders.js";
 
 /**
  * Παράγει στατικό snapshot `web/public/data.json` που τρώει το Next.js app.
@@ -28,18 +29,29 @@ async function main() {
     }));
   }
 
+  // Διαγωνισμοί δημοσίων έργων (ΔΙΑΥΓΕΙΑ) — ζωντανό fetch, ανεκτικό σε σφάλμα
+  let tenders: Tender[] = [];
+  try {
+    process.stdout.write("  τράβηγμα διαγωνισμών (ΔΙΑΥΓΕΙΑ)… ");
+    tenders = await fetchTenders();
+    console.log(`${tenders.length}`);
+  } catch (e) {
+    console.log(`✗ ${(e as Error).message} (συνεχίζω χωρίς διαγωνισμούς)`);
+  }
+
   const data = {
     generatedAt: new Date().toISOString(),
-    stats: { total: calls.length, open: open.length, bySource },
+    stats: { total: calls.length, open: open.length, bySource, tenders: tenders.length },
     profiles: PROFILES,
     calls,
     matches,
+    tenders,
   };
 
   await mkdir(dirname(OUT), { recursive: true });
   await writeFile(OUT, JSON.stringify(data, null, 2), "utf8");
   console.log(`✓ ${OUT}`);
-  console.log(`  ${calls.length} προσκλήσεις (${open.length} ανοιχτές) · ${PROFILES.length} profiles`);
+  console.log(`  ${calls.length} προσκλήσεις (${open.length} ανοιχτές) · ${tenders.length} διαγωνισμοί · ${PROFILES.length} profiles`);
 
   await prisma.$disconnect();
 }
