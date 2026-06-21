@@ -53,6 +53,7 @@ export interface Tender {
   currency?: string;
   criterion?: string;
   procedure?: string;
+  region: string;
   issueDate: string;
   documentUrl: string;
   decisionUrl: string;

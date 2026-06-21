@@ -22,6 +22,9 @@ export default function TenderCard({ t, onOpen }: { t: Tender; onOpen: () => voi
 
       <div className="text-[14px] font-semibold leading-snug text-ink group-hover:text-azure line-clamp-3">{t.title}</div>
       <div className="mt-2 text-[12px] font-medium text-slate-600 line-clamp-1">{t.org}</div>
+      {t.region && t.region !== "Πανελλαδικό" ? (
+        <div className="mt-1 text-[11px] text-slate-400">📍 {t.region}</div>
+      ) : null}
 
       <div className="mt-auto flex w-full items-end justify-between pt-3 text-[12px] text-slate-500">
         <div>

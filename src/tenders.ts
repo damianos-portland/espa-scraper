@@ -23,6 +23,7 @@ export interface Tender {
   currency?: string;
   criterion?: string; // κριτήριο ανάθεσης
   procedure?: string; // Ανοιχτός | Κλειστός
+  region: string; // Περιφέρεια (heuristic από τον φορέα)
   issueDate: string; // ISO (ημ. ανάρτησης)
   documentUrl: string; // PDF διακήρυξης
   decisionUrl: string; // σελίδα ΔΙΑΥΓΕΙΑ
@@ -146,14 +147,17 @@ export async function fetchTenders(today = new Date()): Promise<Tender[]> {
     return amt == null || amt <= MAX_AMOUNT;
   });
 
+  const { regionFromOrg } = await import("./regions.js");
   return pMap(kept, 8, async (d): Promise<Tender> => {
     const ex = d.extraFieldValues ?? {};
+    const org = await orgLabel(d.organizationId);
     return {
       id: d.ada,
       source: "diavgeia",
       title: d.subject?.trim() ?? d.ada,
-      org: await orgLabel(d.organizationId),
+      org,
       orgId: d.organizationId,
+      region: regionFromOrg(org),
       contractType: ex.manifestContractType ?? "",
       cpv: ex.cpv ?? [],
       amount: ex.estimatedAmount?.amount,

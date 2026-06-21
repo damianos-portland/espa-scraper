@@ -53,6 +53,7 @@ export default function TenderModal({ tender: t, onClose }: { tender: Tender; on
             <Fact label="Προϋπολογισμός" value={fmtEuro(t.amount)} strong />
             <Fact label="Εγγύηση συμμ. (2%)" value={t.guarantee != null ? `≈ ${fmtEuro(t.guarantee)}` : undefined} strong />
             <Fact label="Κατηγορία πτυχίου" value={t.category} strong />
+            <Fact label="Περιφέρεια" value={t.region} />
             <Fact label="Κριτήριο ανάθεσης" value={t.criterion} />
             <Fact label="Διαδικασία" value={t.procedure ? `${t.procedure} διαγωνισμός` : undefined} />
             <Fact label="Αναρτήθηκε" value={fmtDate(t.issueDate)} />
