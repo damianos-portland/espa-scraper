@@ -26,6 +26,10 @@ export interface Tender {
   issueDate: string; // ISO (ημ. ανάρτησης)
   documentUrl: string; // PDF διακήρυξης
   decisionUrl: string; // σελίδα ΔΙΑΥΓΕΙΑ
+  // — από ανάγνωση διακήρυξης (enrichment) —
+  category?: string; // κατηγορία πτυχίου (ΟΔΟΠΟΙΙΑΣ, ΟΙΚΟΔΟΜΙΚΑ…)
+  guarantee?: number; // εγγύηση συμμετοχής (€) ≈ 2% εκτιμώμενης αξίας
+  esidisNo?: string; // Α/Α συστήματος ΕΣΗΔΗΣ (αν βρεθεί)
 }
 
 interface RawDecision {
@@ -79,6 +83,42 @@ async function pMap<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>): Prom
     }),
   );
   return res;
+}
+
+/**
+ * Εμπλουτισμός: διαβάζει τη διακήρυξη (PDF) για κατηγορία πτυχίου & υπολογίζει
+ * εγγύηση συμμετοχής (2%). Με disk cache (ΑΔΑ) -> τα επόμενα runs τραβούν μόνο νέα.
+ */
+export async function enrichTenders(tenders: Tender[], cachePath: string): Promise<Tender[]> {
+  const { readFile, writeFile } = await import("node:fs/promises");
+  const { fetchPdfText } = await import("./pdf.js");
+  const { extractTenderFacts } = await import("./tender-extract.js");
+
+  let cache: Record<string, { category: string | null }> = {};
+  try {
+    cache = JSON.parse(await readFile(cachePath, "utf8"));
+  } catch {
+    /* χωρίς cache ακόμα */
+  }
+
+  const todo = tenders.filter((t) => !(t.id in cache));
+  let done = 0;
+  await pMap(todo, 6, async (t) => {
+    try {
+      const text = await fetchPdfText(t.documentUrl, 25000);
+      cache[t.id] = { category: extractTenderFacts(text, t.amount).category ?? null };
+    } catch {
+      cache[t.id] = { category: null };
+    }
+    if (++done % 40 === 0) process.stdout.write(`${done}/${todo.length} `);
+  });
+
+  await writeFile(cachePath, JSON.stringify(cache));
+  return tenders.map((t) => ({
+    ...t,
+    category: cache[t.id]?.category ?? undefined,
+    guarantee: t.amount != null ? Math.round(t.amount * 0.02) : undefined,
+  }));
 }
 
 export async function fetchTenders(today = new Date()): Promise<Tender[]> {

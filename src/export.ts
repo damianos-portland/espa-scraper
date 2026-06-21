@@ -3,7 +3,9 @@ import { dirname } from "node:path";
 import { prisma, rowToCall } from "./db.js";
 import { PROFILES } from "./profiles.js";
 import { rankForProfile } from "./matching.js";
-import { fetchTenders, type Tender } from "./tenders.js";
+import { fetchTenders, enrichTenders, type Tender } from "./tenders.js";
+
+const TENDER_CACHE = new URL("../web/.tender-cache.json", import.meta.url).pathname;
 
 /**
  * Παράγει στατικό snapshot `web/public/data.json` που τρώει το Next.js app.
@@ -35,6 +37,9 @@ async function main() {
     process.stdout.write("  τράβηγμα διαγωνισμών (ΔΙΑΥΓΕΙΑ)… ");
     tenders = await fetchTenders();
     console.log(`${tenders.length}`);
+    process.stdout.write("  ανάγνωση διακηρύξεων (κατηγορία/εγγύηση)… ");
+    tenders = await enrichTenders(tenders, TENDER_CACHE);
+    console.log("✓");
   } catch (e) {
     console.log(`✗ ${(e as Error).message} (συνεχίζω χωρίς διαγωνισμούς)`);
   }

@@ -7,6 +7,8 @@ import { GEO, PROFILE_ICON, SOURCE, THEME } from "@/lib/labels";
 import { daysLeft, fmtDate } from "@/lib/format";
 import CallCard from "@/components/CallCard";
 import TenderCard from "@/components/TenderCard";
+import TenderModal from "@/components/TenderModal";
+import type { Tender } from "@/lib/types";
 
 const data = rawData as unknown as Dataset;
 const TENDERS = "__tenders__";
@@ -201,6 +203,7 @@ function TendersView() {
   const [q, setQ] = useState("");
   const [types, setTypes] = useState<Set<string>>(new Set());
   const [bucket, setBucket] = useState("all");
+  const [selected, setSelected] = useState<Tender | null>(null);
 
   const results = useMemo(() => {
     const text = q.trim().toLowerCase();
@@ -252,10 +255,12 @@ function TendersView() {
       ) : (
         <Grid>
           {results.map((t) => (
-            <TenderCard key={t.id} t={t} />
+            <TenderCard key={t.id} t={t} onOpen={() => setSelected(t)} />
           ))}
         </Grid>
       )}
+
+      {selected ? <TenderModal tender={selected} onClose={() => setSelected(null)} /> : null}
     </>
   );
 }

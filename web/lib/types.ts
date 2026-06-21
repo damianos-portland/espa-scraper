@@ -56,6 +56,9 @@ export interface Tender {
   issueDate: string;
   documentUrl: string;
   decisionUrl: string;
+  category?: string;
+  guarantee?: number | null;
+  esidisNo?: string;
 }
 
 export interface Dataset {

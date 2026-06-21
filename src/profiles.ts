@@ -18,7 +18,7 @@ export interface Profile {
 export const PROFILES: Profile[] = [
   {
     id: "construction-ae",
-    label: "Κατασκευαστική ΑΕ (πατέρας)",
+    label: "Κατασκευαστική ΑΕ",
     beneficiaryTypes: ["EXISTING_SME", "LARGE_ENTERPRISE"],
     themes: ["DIGITAL", "GREEN_ENERGY", "RENOVATION", "LIQUIDITY", "EXTROVERSION"],
     geography: ["NATIONAL", "DYTIKI_ELLADA"],
@@ -27,7 +27,7 @@ export const PROFILES: Profile[] = [
   },
   {
     id: "realestate",
-    label: "Real estate (αδερφή + πατέρας)",
+    label: "Real estate",
     beneficiaryTypes: ["EXISTING_SME"],
     themes: ["DIGITAL", "GREEN_ENERGY", "RENOVATION", "TOURISM"],
     geography: ["NATIONAL", "DYTIKI_ELLADA"],
