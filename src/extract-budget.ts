@@ -98,10 +98,23 @@ export async function downloadMeleti(sys: string): Promise<string> {
   try {
     const ctx = await b.newContext({ acceptDownloads: true });
     const pg = await ctx.newPage();
-    await pg.goto(`http://pwgopendata.eprocurement.gov.gr/actSearchErgwn/resources/search/${sys}`, { waitUntil: "networkidle", timeout: 45000 });
+    const url = `http://pwgopendata.eprocurement.gov.gr/actSearchErgwn/resources/search/${sys}`;
+    // άνοιγμα tab «Συνημμένα Αρχεία» με retry (το ADF του ΕΣΗΔΗΣ αργεί ενίοτε)
+    const openAttachments = async () => {
+      const tab = pg.getByText("Συνημμένα Αρχεία").first();
+      await tab.waitFor({ state: "visible", timeout: 18000 });
+      await tab.click();
+      await pg.waitForTimeout(3500);
+    };
+    await pg.goto(url, { waitUntil: "networkidle", timeout: 40000 });
     await pg.waitForTimeout(2500);
-    await pg.getByText("Συνημμένα Αρχεία").first().click();
-    await pg.waitForTimeout(3500);
+    try {
+      await openAttachments();
+    } catch {
+      await pg.goto(url, { waitUntil: "networkidle", timeout: 40000 }).catch(() => {});
+      await pg.waitForTimeout(3000);
+      await openAttachments();
+    }
     const rows = pg.locator("[role=row], tr").filter({ hasText: /ΜΕΛΕΤΗ|ΠΡΟ[ΫΥ]ΠΟΛΟΓΙΣΜ/i });
     const n = await rows.count();
     for (let i = 0; i < n; i++) {

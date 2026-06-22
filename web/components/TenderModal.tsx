@@ -27,7 +27,9 @@ export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tend
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 130000); // ~2 λεπτά max
     try {
-      const res = await fetch(`${BUDGET_API}/extract?ada=${encodeURIComponent(t.id)}`, { signal: ctrl.signal });
+      // προτίμηση σταθερού αρ. συστήματος (από enrichment) -> αξιόπιστο· αλλιώς live από ΑΔΑ
+      const query = t.esidisNo ? `sys=${t.esidisNo}` : `ada=${encodeURIComponent(t.id)}`;
+      const res = await fetch(`${BUDGET_API}/extract?${query}`, { signal: ctrl.signal });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || `σφάλμα ${res.status}`);
       const rows = parseExtractedJson(JSON.stringify(data));
@@ -58,7 +60,10 @@ export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tend
   }, [onClose]);
 
   const isWork = t.contractType === "Έργα";
-  const promitheus = `https://nepps-search.eprocurement.gov.gr/actSearch/faces/active_search_main.jspx`;
+  // deep-link στον διαγωνισμό όταν έχουμε αρ. συστήματος, αλλιώς γενική αναζήτηση
+  const esidisLink = t.esidisNo
+    ? `https://pwgopendata.eprocurement.gov.gr/actSearchErgwn/resources/search/${t.esidisNo}`
+    : `https://nepps-search.eprocurement.gov.gr/actSearch/faces/active_search_main.jspx`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
@@ -92,6 +97,7 @@ export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tend
             <Fact label="CPV" value={t.cpv.length ? t.cpv.join(", ") : undefined} />
             <Fact label="Τύπος" value={t.contractType} />
             <Fact label="ΑΔΑ" value={t.id} />
+            <Fact label="Α/Α ΕΣΗΔΗΣ" value={t.esidisNo} />
           </div>
 
           {/* καταληκτική — δεν είναι στα δομημένα δεδομένα */}
@@ -113,8 +119,8 @@ export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tend
             <a href={t.decisionUrl} target="_blank" rel="noreferrer" className="rounded-xl bg-white px-4 py-2 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">
               ΔΙΑΥΓΕΙΑ ↗
             </a>
-            <a href={promitheus} target="_blank" rel="noreferrer" className="rounded-xl bg-white px-4 py-2 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">
-              Αναζήτηση ΕΣΗΔΗΣ ↗
+            <a href={esidisLink} target="_blank" rel="noreferrer" className="rounded-xl bg-white px-4 py-2 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">
+              {t.esidisNo ? "ΕΣΗΔΗΣ διαγωνισμός ↗" : "Αναζήτηση ΕΣΗΔΗΣ ↗"}
             </a>
           </div>
           {err ? <p className="mt-2 text-[12px] text-rose-600">{err}</p> : null}

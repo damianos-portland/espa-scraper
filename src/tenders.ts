@@ -95,21 +95,25 @@ export async function enrichTenders(tenders: Tender[], cachePath: string): Promi
   const { fetchPdfText } = await import("./pdf.js");
   const { extractTenderFacts } = await import("./tender-extract.js");
 
-  let cache: Record<string, { category: string | null }> = {};
+  let cache: Record<string, { category: string | null; esidisNo?: string | null }> = {};
   try {
     cache = JSON.parse(await readFile(cachePath, "utf8"));
   } catch {
     /* χωρίς cache ακόμα */
   }
 
-  const todo = tenders.filter((t) => !(t.id in cache));
+  // re-process & όσα δεν έχουν ακόμα esidisNo (migration από παλιό cache)
+  const todo = tenders.filter((t) => !(t.id in cache) || cache[t.id]?.esidisNo === undefined);
   let done = 0;
   await pMap(todo, 6, async (t) => {
     try {
       const text = await fetchPdfText(t.documentUrl, 25000);
-      cache[t.id] = { category: extractTenderFacts(text, t.amount).category ?? null };
+      // αρ. συστήματος ΕΣΗΔΗΣ από το link της διακήρυξης (σταθερό -> αξιόπιστο one-click)
+      const sys = text.match(/pwgopendata[^\s)"']*?search\/(\d{5,7})/i)?.[1]
+        ?? text.match(/α\/α\s*συστ[ηή]ματος[^\d]{0,15}(\d{6})/i)?.[1] ?? null;
+      cache[t.id] = { category: extractTenderFacts(text, t.amount).category ?? null, esidisNo: sys };
     } catch {
-      cache[t.id] = { category: null };
+      cache[t.id] = { category: null, esidisNo: null };
     }
     if (++done % 40 === 0) process.stdout.write(`${done}/${todo.length} `);
   });
@@ -118,6 +122,7 @@ export async function enrichTenders(tenders: Tender[], cachePath: string): Promi
   return tenders.map((t) => ({
     ...t,
     category: cache[t.id]?.category ?? undefined,
+    esidisNo: cache[t.id]?.esidisNo ?? undefined,
     guarantee: t.amount != null ? Math.round(t.amount * 0.02) : undefined,
   }));
 }
