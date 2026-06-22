@@ -18,7 +18,9 @@ function Fact({ label, value, strong }: { label: string; value?: React.ReactNode
   );
 }
 
-export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tender: Tender; onClose: () => void; onLoadBudget?: (rows: BudgetRow[]) => void }) {
+export type BudgetOfficial = { extractedTotal: number; worksTotal: number | null };
+
+export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tender: Tender; onClose: () => void; onLoadBudget?: (rows: BudgetRow[], official?: BudgetOfficial) => void }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tend
       if (!res.ok || data.error) throw new Error(data.error || `σφάλμα ${res.status}`);
       const rows = parseExtractedJson(JSON.stringify(data));
       if (!rows.length) throw new Error("Δεν εξήχθησαν άρθρα από τη μελέτη (άτυπο/scanned έγγραφο).");
-      onLoadBudget?.(rows);
+      onLoadBudget?.(rows, { extractedTotal: data.total ?? 0, worksTotal: data.worksTotal ?? null });
       onClose();
     } catch (e) {
       const m = (e as Error).message;

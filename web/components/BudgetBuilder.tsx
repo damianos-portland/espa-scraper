@@ -26,18 +26,19 @@ export default function BudgetBuilder() {
   const [discounts, setDiscounts] = useState<Record<string, number>>({});
   const [quarter, setQuarter] = useState(ANATH.defaultQuarter);
   const [costFactor, setCostFactor] = useState(0.7); // εκτιμώμενο κόστος ως % μελέτης
+  const [official, setOfficial] = useState<{ extractedTotal: number; worksTotal: number | null } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (s?.rows) { setRows(s.rows); setDiscounts(s.discounts ?? {}); setQuarter(s.quarter ?? ANATH.defaultQuarter); if (s.costFactor != null) setCostFactor(s.costFactor); }
+      if (s?.rows) { setRows(s.rows); setDiscounts(s.discounts ?? {}); setQuarter(s.quarter ?? ANATH.defaultQuarter); if (s.costFactor != null) setCostFactor(s.costFactor); setOfficial(s.official ?? null); }
     } catch {}
     setLoaded(true);
   }, []);
   useEffect(() => {
-    if (loaded) localStorage.setItem(KEY, JSON.stringify({ rows, discounts, quarter, costFactor }));
-  }, [rows, discounts, quarter, costFactor, loaded]);
+    if (loaded) localStorage.setItem(KEY, JSON.stringify({ rows, discounts, quarter, costFactor, official }));
+  }, [rows, discounts, quarter, costFactor, official, loaded]);
 
   const calc = useMemo(() => calcBudget(rows, discounts, costFactor), [rows, discounts, costFactor]);
   const evalResult = useMemo(() => evaluate(rows, calc), [rows, calc]);
@@ -111,6 +112,18 @@ export default function BudgetBuilder() {
         <span className="font-semibold">Προϋπολογισμός προσφοράς</span> — γράψε τα άρθρα· ο <b>συντελεστής αναθεώρησης</b> συμπληρώνεται
         αυτόματα από τον κωδικό (επίσημο αρχείο {ANATH.count} κωδικών). Τα δεδομένα αποθηκεύονται τοπικά στον browser.
       </div>
+
+      {official?.worksTotal ? (() => {
+        const pct = (calc.meletiTotal / official.worksTotal!) * 100;
+        const ok = pct >= 98 && pct <= 102, partial = pct >= 80;
+        const cls = ok ? "border-emerald-200 bg-emerald-50 text-emerald-900" : partial ? "border-amber-200 bg-amber-50 text-amber-900" : "border-rose-200 bg-rose-50 text-rose-900";
+        return (
+          <div className={`mt-3 rounded-xl border px-4 py-2.5 text-[13px] ${cls}`}>
+            {ok ? "✓" : "⚠"} <b>Επικύρωση εξαγωγής:</b> εξήχθη {eur(calc.meletiTotal)} · επίσημο σύνολο δαπανών {eur(official.worksTotal!)} → <b>{pct.toFixed(1)}%</b>
+            {ok ? " — πλήρης ✓" : partial ? " — μερική, επιβεβαίωσε τα ελλιπή άρθρα" : " — ελλιπής εξαγωγή, χρησιμοποίησε Import xls / επαλήθευσε"}
+          </div>
+        );
+      })() : null}
 
       {/* toolbar */}
       <div className="mt-4 flex flex-wrap items-center gap-2">

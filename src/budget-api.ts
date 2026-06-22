@@ -34,11 +34,12 @@ const server = createServer(async (req, res) => {
 
     console.log(`[${sys}] κατέβασμα + εξαγωγή…`);
     const pdfPath = await withTimeout(downloadMeleti(sys), 60000, "Το κατέβασμα από ΕΣΗΔΗΣ άργησε — άτυπο/μη διαθέσιμο αρχείο (timeout).");
-    const rows = await withTimeout(extractBudget(pdfPath), 45000, "Η εξαγωγή του PDF άργησε (timeout).");
+    const { rows, worksTotal, groupTotals } = await withTimeout(extractBudget(pdfPath), 45000, "Η εξαγωγή του PDF άργησε (timeout).");
     const total = rows.reduce((a, r) => a + r.dapani, 0);
-    console.log(`[${sys}] ✓ ${rows.length} άρθρα · ${total.toLocaleString("el-GR")} €`);
+    const acc = worksTotal ? Math.round((total / worksTotal) * 100) : null;
+    console.log(`[${sys}] ✓ ${rows.length} άρθρα · ${total.toLocaleString("el-GR")} €${acc ? ` (${acc}% του επίσημου)` : ""}`);
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify({ sys, total, rows }));
+    res.end(JSON.stringify({ sys, total, worksTotal, groupTotals, rows }));
   } catch (e) {
     res.writeHead(500, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify({ error: (e as Error).message }));

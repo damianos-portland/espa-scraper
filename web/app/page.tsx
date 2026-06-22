@@ -38,8 +38,8 @@ export default function Page() {
   const activeProfile = data.profiles.find((p) => p.id === tab);
 
   // φόρτωση εξαγμένου προϋπολογισμού (από tender modal) στο tab «Προϋπολογισμός»
-  const loadBudget = (rows: BudgetRow[]) => {
-    localStorage.setItem("espa-radar-budget-v1", JSON.stringify({ rows, discounts: {} }));
+  const loadBudget = (rows: BudgetRow[], official?: { extractedTotal: number; worksTotal: number | null }) => {
+    localStorage.setItem("espa-radar-budget-v1", JSON.stringify({ rows, discounts: {}, official }));
     setTab(BUDGET);
   };
   const updated = fmtDate(data.generatedAt.slice(0, 10));
@@ -237,7 +237,7 @@ const parseNum = (s: string) => {
   return s.trim() && Number.isFinite(n) ? n : undefined;
 };
 
-function TendersView({ onLoadBudget }: { onLoadBudget: (rows: BudgetRow[]) => void }) {
+function TendersView({ onLoadBudget }: { onLoadBudget: (rows: BudgetRow[], official?: { extractedTotal: number; worksTotal: number | null }) => void }) {
   const [q, setQ] = useState("");
   const [types, setTypes] = useState<Set<string>>(new Set());
   const [cats, setCats] = useState<Set<string>>(new Set());

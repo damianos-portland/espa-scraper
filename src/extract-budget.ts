@@ -22,11 +22,19 @@ export interface ExtractedRow {
   dapani: number;
 }
 
-export async function extractBudget(pdfPath: string): Promise<ExtractedRow[]> {
+export interface BudgetExtract {
+  rows: ExtractedRow[];
+  worksTotal: number | null;          // επίσημο «Σύνολο Δαπανών» (works, προ ΓΕ&ΟΕ)
+  groupTotals: Record<string, number>; // επίσημα «Άθροισμα Ομάδας»
+}
+
+export async function extractBudget(pdfPath: string): Promise<BudgetExtract> {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(pdfPath)), useSystemFonts: true }).promise;
 
   const out: ExtractedRow[] = [];
+  const groupTotals: Record<string, number> = {}; // επίσημα «Άθροισμα Ομάδας»
+  let worksTotal: number | null = null; // επίσημο «Σύνολο Δαπανών»
   let group = "";
   let inBudget = false;
 
@@ -52,6 +60,14 @@ export async function extractBudget(pdfPath: string): Promise<ExtractedRow[]> {
       if (gm) { inBudget = true; group = (gm[2] || gm[1]).replace(/\s+/g, " ").replace(/Σύνολο.*/i, "").replace(/[\s-]+$/, "").replace(/\s*-\s*/g, "-").trim().slice(0, 50) || `ΟΜΑΔΑ ${gm[1]}`; continue; }
       if (!inBudget) continue;
       if (/ΓΕΝΙΚΗ ΣΥΓΓΡΑΦΗ|ΕΙΔΙΚΗ ΣΥΓΓΡΑΦΗ|ΤΙΜΟΛΟΓΙΟ ΜΕΛΕΤΗΣ/.test(joined)) inBudget = false;
+
+      // επίσημα σύνολα (για αυτο-επικύρωση)
+      const lastMoney = () => {
+        const m = r.filter((t) => /^\d{1,3}(\.\d{3})*,\d{2}$/.test(t.s));
+        return m.length ? numGR(m[m.length - 1].s) : null;
+      };
+      if (/[ΆΑ]θροισμα Ομάδας|ΣΥΝΟΛΟ ΟΜΑΔΑΣ/i.test(joined)) { const v = lastMoney(); if (v) groupTotals[group || "—"] = v; continue; }
+      if (/Σύνολο Δαπανών|[ΆΑ]θροισμα Εργασιών|ΣΥΝΟΛΟ ΕΡΓΑΣΙΩΝ/i.test(joined)) { const v = lastMoney(); if (v && (!worksTotal || v > worksTotal)) worksTotal = v; continue; }
 
       // ── adaptive parsing: άγκυρα = ΜΟΝΑΔΑ + τελικά νούμερα (ο κωδ. αναθ. προαιρετικός) ──
       // latin-fix: λατινικά lookalikes -> ελληνικά (π.χ. «OIK» -> «ΟΙΚ»)
@@ -88,7 +104,7 @@ export async function extractBudget(pdfPath: string): Promise<ExtractedRow[]> {
       out.push({ group: group || "—", articleCode, desc, revCode, unit, qty, price, dapani });
     }
   }
-  return out;
+  return { rows: out, worksTotal, groupTotals };
 }
 
 /**
@@ -144,20 +160,39 @@ export async function downloadMeleti(sys: string): Promise<string> {
       await pg.waitForTimeout(3000);
       await openAttachments();
     }
-    const rows = pg.locator("[role=row], tr").filter({ hasText: /ΜΕΛΕΤΗ|ΠΡΟ[ΫΥ]ΠΟΛΟΓΙΣΜ/i });
-    const n = await rows.count();
-    for (let i = 0; i < n; i++) {
-      const dl = rows.nth(i).getByText("Λήψη").first();
-      if (await dl.count()) {
-        const [download] = await Promise.all([pg.waitForEvent("download", { timeout: 30000 }).catch(() => null), dl.click().catch(() => {})]);
-        if (download) {
-          const path = `/tmp/meleti-${sys}.pdf`;
-          await download.saveAs(path);
-          return path;
+    // χαρτογράφηση κάθε «Λήψη» -> όνομα αρχείου, score, μαρκάρισμα του καλύτερου
+    // (inline, χωρίς named const functions -> αποφυγή esbuild «__name» στο browser)
+    const picked = await pg.evaluate(() => {
+      const btns = [...document.querySelectorAll("a,button,span")].filter((e) => e.textContent && e.textContent.trim() === "Λήψη");
+      let best = null;
+      let bestScore = 0;
+      for (const el of btns) {
+        let row = el;
+        let text = "";
+        for (let k = 0; k < 6 && row; k++) { row = row.parentElement; if (row && row.textContent && /\.(pdf|xls|xlsx|doc|docx)/i.test(row.textContent)) { text = row.textContent; break; } }
+        let s = 0;
+        if (text) {
+          const n = text.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+          if (/ΚΑΝΟΝΙΣΜ|ΤΕΧΝΙΚ|ΣΥΓΓΡΑΦ|ΤΙΜΟΛΟΓ|ΔΙΑΚΗΡΥ|ΟΙΚΟΝΟΜΙΚ|ESPD|ΕΕΕΣ|ΧΡΟΝΟΔΙΑΓ|ΑΠΑΙΤΗΣ|ΠΡΟΜΕΤΡΗΣ|ΦΑΥ|ΣΑΥ/.test(n)) s = -1;
+          else if (/ΠΡΟ[ΫΥ]ΠΟΛΟΓΙΣΜ/.test(n)) s = 3;
+          else if (/ΕΝΙΑΙΑ ΜΕΛΕΤ/.test(n)) s = 2;
+          else if (/ΜΕΛΕΤ/.test(n)) s = 1;
         }
+        if (s > bestScore) { bestScore = s; best = el; }
       }
-    }
-    throw new Error("Δεν βρέθηκε αρχείο μελέτης/προϋπολογισμού στα συνημμένα.");
+      if (!best) return null;
+      best.setAttribute("data-budget-pick", "1");
+      return bestScore;
+    });
+    if (!picked) throw new Error("Δεν βρέθηκε αρχείο προϋπολογισμού/μελέτης στα συνημμένα.");
+
+    const [download] = await Promise.all([
+      pg.waitForEvent("download", { timeout: 30000 }),
+      pg.locator('[data-budget-pick="1"]').click(),
+    ]);
+    const path = `/tmp/meleti-${sys}.pdf`;
+    await download.saveAs(path);
+    return path;
   } finally {
     await b.close();
   }
@@ -173,13 +208,23 @@ async function main() {
     pdfPath = await downloadMeleti(sys);
     console.log(`  ${pdfPath}`);
   }
-  const rows = await extractBudget(pdfPath);
+  const { rows, worksTotal, groupTotals } = await extractBudget(pdfPath);
   const byGroup = new Map<string, number>();
   for (const r of rows) byGroup.set(r.group, (byGroup.get(r.group) ?? 0) + r.dapani);
+  const fmt = (n: number) => n.toLocaleString("el-GR", { minimumFractionDigits: 2 });
   console.log(`✓ ${rows.length} άρθρα σε ${byGroup.size} ομάδες:`);
-  for (const [g, sum] of byGroup) console.log(`  • ${g}: ${sum.toLocaleString("el-GR", { minimumFractionDigits: 2 })} €`);
+  for (const [g, sum] of byGroup) {
+    const off = groupTotals[g];
+    const flag = off ? (Math.abs(off - sum) < 1 ? " ✓" : ` ⚠ επίσημο ${fmt(off)}`) : "";
+    console.log(`  • ${g}: ${fmt(sum)} €${flag}`);
+  }
+  const total = rows.reduce((a, r) => a + r.dapani, 0);
+  if (worksTotal) {
+    const acc = ((total / worksTotal) * 100).toFixed(1);
+    console.log(`Σύνολο: ${fmt(total)} € | επίσημο ${fmt(worksTotal)} € → ${acc}%`);
+  }
   const out = (arg === "--sys" ? process.argv[4] : process.argv[3]) ?? "/tmp/budget-extracted.json";
-  writeFileSync(out, JSON.stringify({ source: pdfPath.split("/").pop(), total: rows.reduce((a, r) => a + r.dapani, 0), rows }, null, 2));
+  writeFileSync(out, JSON.stringify({ source: pdfPath.split("/").pop(), total, worksTotal, groupTotals, rows }, null, 2));
   console.log(`→ ${out}`);
 }
 
