@@ -148,7 +148,7 @@ export default function BudgetBuilder() {
         </div>
       ) : (
         <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="w-full min-w-[1000px] text-[12px]">
+          <table className="w-full min-w-[1240px] text-[12px]">
             <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-400">
               <tr>
                 {["Είδος εργασίας", "Κωδ. Άρθρου", "Κωδ. Αναθ.", "Αναθεώρηση", "Μον.", "Ποσότ.", "Τιμή", "Δαπάνη", "Υλικά €", "Εργατικά €", "Ομάδα", ""].map((h) => (
@@ -284,7 +284,7 @@ function Row({ r, quarter, onChange, onDelete }: { r: BudgetRow; quarter: string
   const inp = "w-full bg-transparent px-1 py-1 outline-none focus:bg-sky-50";
   return (
     <tr className="hover:bg-slate-50/60">
-      <td className="min-w-[200px]"><input className={inp} value={r.desc} onChange={(e) => onChange({ desc: e.target.value })} placeholder="περιγραφή" /></td>
+      <td className="w-[380px] min-w-[380px] align-top"><textarea rows={2} className={`${inp} resize-y leading-snug`} value={r.desc} onChange={(e) => onChange({ desc: e.target.value })} placeholder="περιγραφή" title={r.desc} /></td>
       <td><input className={`${inp} font-mono`} value={r.articleCode} onChange={(e) => onChange({ articleCode: e.target.value })} placeholder="ΝΑΟΙΚ…" /></td>
       <td><input className={`${inp} font-mono w-24`} value={r.revCode} onChange={(e) => onChange({ revCode: e.target.value })} placeholder="ΟΙΚ…" /></td>
       <td className="min-w-[150px]"><AnathBadge res={res} onPick={(c) => onChange({ omoeides: c })} /></td>
