@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { fetchPdfText } from "./pdf.js";
-import { downloadMeleti, extractBudget } from "./extract-budget.js";
+import { downloadMeleti, extractBudget, extractSysNo } from "./extract-budget.js";
 
 /**
  * Τοπικός companion server για one-click εξαγωγή προϋπολογισμού από το web app
@@ -15,9 +15,9 @@ const withTimeout = <T>(p: Promise<T>, ms: number, msg: string): Promise<T> =>
 
 async function sysFromAda(ada: string): Promise<string> {
   const text = await fetchPdfText(`https://diavgeia.gov.gr/doc/${ada}`, 25000);
-  const m = text.match(/pwgopendata[^\s)"']*?search\/(\d{5,7})/i) || text.match(/συστ[ηή]μ[^.]{0,30}?(\d{6})/i);
-  if (!m) throw new Error("Δεν βρέθηκε αριθμός συστήματος ΕΣΗΔΗΣ στη διακήρυξη.");
-  return m[1];
+  const sys = extractSysNo(text);
+  if (!sys) throw new Error("Δεν βρέθηκε αριθμός συστήματος ΕΣΗΔΗΣ στη διακήρυξη.");
+  return sys;
 }
 
 const server = createServer(async (req, res) => {

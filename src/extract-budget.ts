@@ -91,6 +91,31 @@ export async function extractBudget(pdfPath: string): Promise<ExtractedRow[]> {
   return out;
 }
 
+/**
+ * Εξάγει τον αριθμό συστήματος ΕΣΗΔΗΣ από κείμενο διακήρυξης.
+ * 1) pwgopendata link (πιο αξιόπιστο)· 2) 6-ψήφιος κοντά σε «α/α/συστημικός αριθμός»·
+ * 3) fallback: συχνότερος 6-ψήφιος κοντά σε «συστημ».
+ */
+export function extractSysNo(text: string): string | null {
+  const link = text.match(/pwgopendata[^\s)"']*?search\/(\d{5,7})/i);
+  if (link) return link[1];
+  const t = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const cues = [
+    /α\/α\s*συστ[ηι]ματος[^\d]{0,20}(\d{6})/,
+    /συστημικ[οω][^.]{0,30}?αριθμ[οω][^\d]{0,25}(\d{6})/,
+    /αυξ[οω]ν\s*αριθμ[οω][^\d]{0,20}(\d{6})/,
+    /α\/α\s*εσηδης[^\d]{0,15}(\d{6})/,
+  ];
+  for (const re of cues) { const m = t.match(re); if (m) return m[1]; }
+  const near = [...t.matchAll(/συστημ[^.]{0,45}?(\d{6})/g)].map((m) => m[1]).filter((n) => +n >= 100000);
+  if (near.length) {
+    const f: Record<string, number> = {};
+    near.forEach((n) => (f[n] = (f[n] ?? 0) + 1));
+    return Object.entries(f).sort((a, b) => b[1] - a[1])[0][0];
+  }
+  return null;
+}
+
 /** Κατεβάζει το αρχείο μελέτης/προϋπολογισμού από το ΕΣΗΔΗΣ μέσω αριθμού συστήματος. */
 export async function downloadMeleti(sys: string): Promise<string> {
   const { chromium } = await import("playwright");
@@ -108,6 +133,10 @@ export async function downloadMeleti(sys: string): Promise<string> {
     };
     await pg.goto(url, { waitUntil: "networkidle", timeout: 40000 });
     await pg.waitForTimeout(2500);
+    // γρήγορος έλεγχος: μη-δημόσιος/κλειστός/ανύπαρκτος διαγωνισμός
+    const body = await pg.innerText("body").catch(() => "");
+    if (/Δεν υφίσταται|κλειστή.{0,20}διαγωνιστικ/i.test(body))
+      throw new Error("Ο διαγωνισμός δεν είναι δημόσια διαθέσιμος στο ΕΣΗΔΗΣ (κλειστή/άλλη διαδικασία).");
     try {
       await openAttachments();
     } catch {

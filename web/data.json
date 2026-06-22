@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T11:36:48.335Z",
+  "generatedAt": "2026-06-22T11:52:36.110Z",
   "stats": {
     "total": 130,
     "open": 15,
@@ -4411,6 +4411,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ9ΛΜ7Λ1-Ψ1Ψ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ9ΛΜ7Λ1-Ψ1Ψ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "221316",
       "guarantee": 9677
     },
     {
@@ -4496,6 +4497,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/Ρ48Φ46ΝΩΑ7-ΩΙΝ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ρ48Φ46ΝΩΑ7-ΩΙΝ",
       "category": "ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ",
+      "esidisNo": "221348",
       "guarantee": 8389
     },
     {
@@ -4623,6 +4625,7 @@
       "issueDate": "2026-06-19",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΟ6ΧΟΞΧΝ-ΤΕΞ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΟ6ΧΟΞΧΝ-ΤΕΞ",
+      "esidisNo": "221019",
       "guarantee": 14182
     },
     {
@@ -4701,6 +4704,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΖΚΡΩΨΗ-3ΑΙ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΖΚΡΩΨΗ-3ΑΙ",
       "category": "ΟΙΚΟΔΟΜΙΚΑ",
+      "esidisNo": "221231",
       "guarantee": 928
     },
     {
@@ -4823,6 +4827,7 @@
       "issueDate": "2026-06-17",
       "documentUrl": "https://diavgeia.gov.gr/doc/6ΜΘ7ΟΞΧΔ-ΞΧΡ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/6ΜΘ7ΟΞΧΔ-ΞΧΡ",
+      "esidisNo": "216075",
       "guarantee": 753
     },
     {
@@ -4905,6 +4910,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/6ΧΕΣΩΨΨ-6Ο4",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/6ΧΕΣΩΨΨ-6Ο4",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "221241",
       "guarantee": 194
     },
     {
@@ -4925,7 +4931,8 @@
       "issueDate": "2026-06-18",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΕ48ΩΨΨ-ΒΔΣ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΕ48ΩΨΨ-ΒΔΣ",
-      "category": "ΟΔΟΠΟΙΙΑΣ"
+      "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "221241"
     },
     {
       "id": "98ΨΔ46ΜΠ3Ζ-Υ25",
@@ -4945,6 +4952,7 @@
       "issueDate": "2026-06-18",
       "documentUrl": "https://diavgeia.gov.gr/doc/98ΨΔ46ΜΠ3Ζ-Υ25",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/98ΨΔ46ΜΠ3Ζ-Υ25",
+      "esidisNo": "218347",
       "guarantee": 1195
     },
     {
@@ -4965,6 +4973,7 @@
       "issueDate": "2026-06-17",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΩΖ7ΟΞΧΔ-Λ10",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΩΖ7ΟΞΧΔ-Λ10",
+      "esidisNo": "221117",
       "guarantee": 1188
     },
     {
@@ -4985,6 +4994,7 @@
       "issueDate": "2026-06-18",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΥ3Η46ΜΠ3Ζ-Ε73",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΥ3Η46ΜΠ3Ζ-Ε73",
+      "esidisNo": "218347",
       "guarantee": 1195
     },
     {
@@ -5276,7 +5286,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-06-17",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΔΗ0Ω96-ΖΡ2",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΔΗ0Ω96-ΖΡ2"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΔΗ0Ω96-ΖΡ2",
+      "esidisNo": "480145"
     },
     {
       "id": "ΡΞΦ0Ω99-ΝΤΞ",
@@ -5317,6 +5328,7 @@
       "issueDate": "2026-06-17",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΟΠΟ7Λ1-ΛΟ9",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΟΠΟ7Λ1-ΛΟ9",
+      "esidisNo": "220624",
       "guarantee": 1200
     },
     {
@@ -5692,6 +5704,7 @@
       "issueDate": "2026-06-15",
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ2ΨΦΩΕΩ-ΘΝ4",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ2ΨΦΩΕΩ-ΘΝ4",
+      "esidisNo": "219182",
       "guarantee": 4624
     },
     {
@@ -5815,6 +5828,7 @@
       "issueDate": "2026-06-15",
       "documentUrl": "https://diavgeia.gov.gr/doc/6ΔΛΣΟΛΤΠ-961",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/6ΔΛΣΟΛΤΠ-961",
+      "esidisNo": "220717",
       "guarantee": 5473
     },
     {
@@ -5856,6 +5870,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΟΖΤ7ΛΩ-Κ7Γ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΟΖΤ7ΛΩ-Κ7Γ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "221177",
       "guarantee": 11966
     },
     {
@@ -5964,6 +5979,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΦΨ6ΩΨΨ-ΔΘΑ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΦΨ6ΩΨΨ-ΔΘΑ",
       "category": "ΟΙΚΟΔΟΜΙΚΑ",
+      "esidisNo": "220631",
       "guarantee": 3710
     },
     {
@@ -5985,6 +6001,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΜΖ1ΩΨΨ-Ω7Σ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΜΖ1ΩΨΨ-Ω7Σ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "220631",
       "guarantee": 3710
     },
     {
@@ -6021,7 +6038,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-06-12",
       "documentUrl": "https://diavgeia.gov.gr/doc/62ΣΠ46ΝΤΛΙ-Β4Χ",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/62ΣΠ46ΝΤΛΙ-Β4Χ"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/62ΣΠ46ΝΤΛΙ-Β4Χ",
+      "esidisNo": "221172"
     },
     {
       "id": "Ψ80146ΝΤΛΙ-25Ε",
@@ -6040,7 +6058,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-06-12",
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ80146ΝΤΛΙ-25Ε",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ80146ΝΤΛΙ-25Ε"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ80146ΝΤΛΙ-25Ε",
+      "esidisNo": "221172"
     },
     {
       "id": "911Δ46ΝΤΛΙ-ΕΣΔ",
@@ -6058,7 +6077,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-06-12",
       "documentUrl": "https://diavgeia.gov.gr/doc/911Δ46ΝΤΛΙ-ΕΣΔ",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/911Δ46ΝΤΛΙ-ΕΣΔ"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/911Δ46ΝΤΛΙ-ΕΣΔ",
+      "esidisNo": "221147"
     },
     {
       "id": "ΡΡΣΗ46ΝΤΛΙ-ΥΗΦ",
@@ -6076,7 +6096,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-06-12",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΡΣΗ46ΝΤΛΙ-ΥΗΦ",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΡΣΗ46ΝΤΛΙ-ΥΗΦ"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΡΣΗ46ΝΤΛΙ-ΥΗΦ",
+      "esidisNo": "221168"
     },
     {
       "id": "ΨΕ5ΨΩ9Ο-ΡΦ8",
@@ -6411,6 +6432,7 @@
       "issueDate": "2026-06-10",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΕΞ7Η46ΨΧΨΤ-ΔΘ6",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΕΞ7Η46ΨΧΨΤ-ΔΘ6",
+      "esidisNo": "220593",
       "guarantee": 516
     },
     {
@@ -6778,6 +6800,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΡΑ1ΩΞ4-9ΨΥ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΡΑ1ΩΞ4-9ΨΥ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "217985",
       "guarantee": 8086
     },
     {
@@ -6858,6 +6881,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/6ΑΑΒΩΨΜ-0ΣΩ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/6ΑΑΒΩΨΜ-0ΣΩ",
       "category": "ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ, ΓΕΩΤΡΗΣΕΩΝ",
+      "esidisNo": "221107",
       "guarantee": 1194
     },
     {
@@ -6899,6 +6923,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/992ΔΩΞ4-2ΚΤ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/992ΔΩΞ4-2ΚΤ",
       "category": "ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ",
+      "esidisNo": "221100",
       "guarantee": 4290
     },
     {
@@ -6919,6 +6944,7 @@
       "issueDate": "2026-06-09",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΦΥ846ΜΧΠΚ-5ΙΑ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΦΥ846ΜΧΠΚ-5ΙΑ",
+      "esidisNo": "220975",
       "guarantee": 28533
     },
     {
@@ -7176,6 +7202,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΝΟΟΩ16-ΖΧΑ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΝΟΟΩ16-ΖΧΑ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "220892",
       "guarantee": 1903
     },
     {
@@ -7275,6 +7302,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΙΓΙΩΨ5-ΙΗΑ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΙΓΙΩΨ5-ΙΗΑ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "220752",
       "guarantee": 1774
     },
     {
@@ -7402,6 +7430,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/6ΧΝΝΩΞΙ-ΣΣΜ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/6ΧΝΝΩΞΙ-ΣΣΜ",
       "category": "ΟΔΟΠΟΙΙΑΣ, ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ, ΠΡΑΣΙΝΟΥ",
+      "esidisNo": "221011",
       "guarantee": 34032
     },
     {
@@ -7423,6 +7452,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/65ΞΑΩΨ5-93Ι",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/65ΞΑΩΨ5-93Ι",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "220651",
       "guarantee": 1613
     },
     {
@@ -7572,7 +7602,8 @@
       "issueDate": "2026-06-04",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΔΥΧ46ΜΤΛΒ-878",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΔΥΧ46ΜΤΛΒ-878",
-      "category": "ΟΙΚΟΔΟΜΙΚΑ"
+      "category": "ΟΙΚΟΔΟΜΙΚΑ",
+      "esidisNo": "220365"
     },
     {
       "id": "ΨΦ4246ΜΤΛΒ-ΤΑΝ",
@@ -7637,6 +7668,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΡΘΒΑ46ΨΧ9Λ-ΣΟ6",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΡΘΒΑ46ΨΧ9Λ-ΣΟ6",
       "category": "ΟΙΚΟΔΟΜΙΚΑ",
+      "esidisNo": "221027",
       "guarantee": 7061
     },
     {
@@ -7793,7 +7825,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-06-03",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΧΟΞΩ96-5ΗΚ",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΧΟΞΩ96-5ΗΚ"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΧΟΞΩ96-5ΗΚ",
+      "esidisNo": "464152"
     },
     {
       "id": "ΨΠΔ7ΩΨΞ-6Ρ5",
@@ -7817,6 +7850,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΠΔ7ΩΨΞ-6Ρ5",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΠΔ7ΩΨΞ-6Ρ5",
       "category": "ΟΙΚΟΔΟΜΙΚΑ",
+      "esidisNo": "453210",
       "guarantee": 8194
     },
     {
@@ -7859,6 +7893,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/92Η8ΩΨΔ-ΠΚ9",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/92Η8ΩΨΔ-ΠΚ9",
       "category": "ΟΔΟΠΟΙΙΑΣ, ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ, ΠΡΑΣΙΝΟΥ",
+      "esidisNo": "220797",
       "guarantee": 8927
     },
     {
@@ -8022,7 +8057,8 @@
       "issueDate": "2026-06-03",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΙ7ΒΩ0Π-Γ2Ξ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΙ7ΒΩ0Π-Γ2Ξ",
-      "category": "ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ"
+      "category": "ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ",
+      "esidisNo": "219323"
     },
     {
       "id": "95ΕΚ7Λ9-ΦΔΘ",
@@ -8234,6 +8270,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΧΧ6ΩΛΒ-6Τ5",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΧΧ6ΩΛΒ-6Τ5",
       "category": "ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ",
+      "esidisNo": "220727",
       "guarantee": 4194
     },
     {
@@ -8422,6 +8459,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΕΕΩΚ46ΝΩΑ7-6Σ9",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΕΕΩΚ46ΝΩΑ7-6Σ9",
       "category": "ΟΙΚΟΔΟΜΙΚΑ, ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ",
+      "esidisNo": "220969",
       "guarantee": 6427
     },
     {
@@ -8525,7 +8563,6 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ0Δ8Ω6Υ-ΔΛΤ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ0Δ8Ω6Υ-ΔΛΤ",
       "category": "ΟΙΚΟΔΟΜΙΚΑ",
-      "esidisNo": "218278",
       "guarantee": 33046
     },
     {
@@ -8715,6 +8752,7 @@
       "issueDate": "2026-05-29",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΥ91Ω9Ο-Ζ2Β",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΥ91Ω9Ο-Ζ2Β",
+      "esidisNo": "220708",
       "guarantee": 4194
     },
     {
@@ -9330,6 +9368,7 @@
       "issueDate": "2026-05-27",
       "documentUrl": "https://diavgeia.gov.gr/doc/99ΧΥΩΨΕ-ΡΛ5",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/99ΧΥΩΨΕ-ΡΛ5",
+      "esidisNo": "207269",
       "guarantee": 11129
     },
     {
@@ -9348,7 +9387,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-05-27",
       "documentUrl": "https://diavgeia.gov.gr/doc/Ρ8ΝΗΩ96-Ρ9Ω",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ρ8ΝΗΩ96-Ρ9Ω"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ρ8ΝΗΩ96-Ρ9Ω",
+      "esidisNo": "453038"
     },
     {
       "id": "ΨΣΝΦΩΗ1-ΖΓΔ",
@@ -9447,7 +9487,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-05-27",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΤΤΤΩΚΒ-ΚΥ6",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΤΤΤΩΚΒ-ΚΥ6"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΤΤΤΩΚΒ-ΚΥ6",
+      "esidisNo": "220136"
     },
     {
       "id": "ΨΠ93Ω9Ρ-0Α5",
@@ -9527,6 +9568,7 @@
       "issueDate": "2026-05-27",
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ299Ω1Ε-ΡΡ3",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ299Ω1Ε-ΡΡ3",
+      "esidisNo": "220809",
       "guarantee": 25000
     },
     {
@@ -10152,6 +10194,7 @@
       "issueDate": "2026-05-22",
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΨΗΕΩΡΒ-8Ι7",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΨΗΕΩΡΒ-8Ι7",
+      "esidisNo": "469082",
       "guarantee": 8065
     },
     {
@@ -10362,6 +10405,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ33346ΝΚΠΔ-Ν87",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ33346ΝΚΠΔ-Ν87",
       "category": "ΗΛΕΚΤΡΟΜΗΧΑΝΟΛΟΓΙΚΑ",
+      "esidisNo": "220293",
       "guarantee": 2572
     },
     {
@@ -10487,7 +10531,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-05-20",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΖΒΙΩ96-43Φ",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΖΒΙΩ96-43Φ"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΖΒΙΩ96-43Φ",
+      "esidisNo": "462050"
     },
     {
       "id": "Ψ7Σ3Ω17-57Χ",
@@ -10633,6 +10678,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/ΨΤ1Τ7ΛΡ-ΕΒΤ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/ΨΤ1Τ7ΛΡ-ΕΒΤ",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "220556",
       "guarantee": 4839
     },
     {
@@ -10694,7 +10740,8 @@
       "procedure": "Ανοικτός",
       "issueDate": "2026-05-19",
       "documentUrl": "https://diavgeia.gov.gr/doc/6Σ7Ρ46ΜΩ0Ι-ΥΙΑ",
-      "decisionUrl": "https://diavgeia.gov.gr/decision/view/6Σ7Ρ46ΜΩ0Ι-ΥΙΑ"
+      "decisionUrl": "https://diavgeia.gov.gr/decision/view/6Σ7Ρ46ΜΩ0Ι-ΥΙΑ",
+      "esidisNo": "220629"
     },
     {
       "id": "ΡΩΟ846ΜΩ0Ι-Ζ6Ρ",
@@ -10815,6 +10862,7 @@
       "issueDate": "2026-05-19",
       "documentUrl": "https://diavgeia.gov.gr/doc/9ΤΤΤ46ΜΦΟΤ-2ΧΣ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9ΤΤΤ46ΜΦΟΤ-2ΧΣ",
+      "esidisNo": "220754",
       "guarantee": 2050
     },
     {
@@ -10898,6 +10946,7 @@
       "issueDate": "2026-05-18",
       "documentUrl": "https://diavgeia.gov.gr/doc/Ψ0ΜΔΩΨΙ-7ΧΧ",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/Ψ0ΜΔΩΨΙ-7ΧΧ",
+      "esidisNo": "220598",
       "guarantee": 2720
     },
     {
@@ -10919,6 +10968,7 @@
       "documentUrl": "https://diavgeia.gov.gr/doc/9Τ5Ξ7ΛΡ-ΙΒ8",
       "decisionUrl": "https://diavgeia.gov.gr/decision/view/9Τ5Ξ7ΛΡ-ΙΒ8",
       "category": "ΟΔΟΠΟΙΙΑΣ",
+      "esidisNo": "220315",
       "guarantee": 6452
     },
     {
