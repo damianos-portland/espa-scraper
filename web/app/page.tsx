@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import rawData from "@/data.json";
 import type { Dataset, FundingCall } from "@/lib/types";
 import { GEO, PROFILE_ICON, SOURCE, THEME } from "@/lib/labels";
@@ -8,10 +8,12 @@ import { daysLeft, fmtDate } from "@/lib/format";
 import CallCard from "@/components/CallCard";
 import TenderCard from "@/components/TenderCard";
 import TenderModal from "@/components/TenderModal";
+import BudgetBuilder from "@/components/BudgetBuilder";
 import type { Tender } from "@/lib/types";
 
 const data = rawData as unknown as Dataset;
 const TENDERS = "__tenders__";
+const BUDGET = "__budget__";
 
 function Toggle({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -28,9 +30,17 @@ function Toggle({ active, onClick, children }: { active: boolean; onClick: () =>
 
 export default function Page() {
   const [tab, setTab] = useState<string>("all");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const tendersMode = tab === TENDERS;
+  const budgetMode = tab === BUDGET;
   const activeProfile = data.profiles.find((p) => p.id === tab);
   const updated = fmtDate(data.generatedAt.slice(0, 10));
+
+  // αποφυγή hydration mismatch: η σχετική ημ/νία λήξης («λήγει σε Χ μέρες»)
+  // & το localStorage εξαρτώνται από τον client -> render μετά το mount.
+  if (!mounted)
+    return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-slate-400">Φόρτωση…</div>;
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
@@ -77,9 +87,19 @@ export default function Page() {
             {data.stats.tenders}
           </span>
         </button>
+        <button
+          onClick={() => setTab(BUDGET)}
+          className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-[13px] font-medium transition ${
+            budgetMode ? "bg-sky-700 text-white" : "text-sky-700 ring-1 ring-sky-200 hover:bg-sky-50"
+          }`}
+        >
+          📐 Προϋπολογισμός
+        </button>
       </nav>
 
-      {tendersMode ? (
+      {budgetMode ? (
+        <BudgetBuilder />
+      ) : tendersMode ? (
         <TendersView />
       ) : (
         <CallsView tab={tab} activeProfile={activeProfile} updated={updated} />
