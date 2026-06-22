@@ -35,7 +35,8 @@ export async function extractBudget(pdfPath: string): Promise<BudgetExtract> {
   const out: ExtractedRow[] = [];
   const groupTotals: Record<string, number> = {}; // επίσημα «Άθροισμα Ομάδας»
   let worksTotal: number | null = null; // επίσημο «Σύνολο Δαπανών»
-  let group = "";
+  let group = "ΟΜΑΔΑ Α"; // default για items πριν εμφανιστεί marker
+  let pending = ""; // συσσώρευση περιγραφής από text-only γραμμές (wrap)
   let inBudget = false;
 
   for (let p = 1; p <= doc.numPages; p++) {
@@ -57,7 +58,13 @@ export async function extractBudget(pdfPath: string): Promise<BudgetExtract> {
       // ανίχνευση πίνακα προϋπολογισμού (πολλαπλά σήματα για robustness σε διαφορετικά layouts)
       if (/ΠΡΟ[ΫΥ]ΠΟΛΟΓΙΣΜΟΣ ΜΕΛΕΤΗΣ|Κωδικός Άρθρου|Άρθρο Αναθεώρησης/.test(joined) || (/Ποσότητα/.test(joined) && /Δαπάνη/.test(joined))) inBudget = true;
       const gm = joined.match(/ΟΜΑΔΑ\s+([Α-Ω0-9]+)\s*:?\s*(.*)/);
-      if (gm) { inBudget = true; group = (gm[2] || gm[1]).replace(/\s+/g, " ").replace(/Σύνολο.*/i, "").replace(/[\s-]+$/, "").replace(/\s*-\s*/g, "-").trim().slice(0, 50) || `ΟΜΑΔΑ ${gm[1]}`; continue; }
+      if (gm) {
+        inBudget = true;
+        const nm = (gm[2] || "").replace(/Σύνολο.*/i, "").replace(/\s+/g, " ").replace(/^[\s.:·\-]+|[\s.:·\-]+$/g, "").trim().slice(0, 50);
+        group = nm || `ΟΜΑΔΑ ${gm[1]}`;
+        pending = "";
+        continue;
+      }
       if (!inBudget) continue;
       if (/ΓΕΝΙΚΗ ΣΥΓΓΡΑΦΗ|ΕΙΔΙΚΗ ΣΥΓΓΡΑΦΗ|ΤΙΜΟΛΟΓΙΟ ΜΕΛΕΤΗΣ/.test(joined)) inBudget = false;
 
@@ -78,7 +85,12 @@ export async function extractBudget(pdfPath: string): Promise<BudgetExtract> {
 
       // τελικά νούμερα = τιμή, ποσότητα, δαπάνη· η δαπάνη πρέπει να είναι money (,dd)
       const numToks = r.filter((t) => isNum(t.s));
-      if (numToks.length < 2 || !/,\d{2}$/.test(numToks[numToks.length - 1].s)) continue;
+      if (numToks.length < 2 || !/,\d{2}$/.test(numToks[numToks.length - 1].s)) {
+        // text-only γραμμή -> συσσώρευση ως (συνεχιζόμενη) περιγραφή
+        if (/[α-ωΑ-Ω]{4,}/.test(joined) && !/ΣΥΝΟΛΟ|ΑΘΡΟΙΣΜΑ|Τιμή|Δαπάνη|Κωδικός|Ποσότητα/i.test(joined) && pending.length < 300)
+          pending = (pending + " " + joined).trim();
+        continue;
+      }
       const dapani = numGR(numToks[numToks.length - 1].s);
       if (dapani <= 0) continue;
       const qty = numGR(numToks[numToks.length - 2].s);
@@ -97,9 +109,13 @@ export async function extractBudget(pdfPath: string): Promise<BudgetExtract> {
         if (!/\d/.test(revCode) && r[idx + 1] && /^[Ν\d][\d.]*$/.test(r[idx + 1].s)) revCode = `${revCode} ${r[idx + 1].s}`;
       }
 
-      const articleCode = r.filter((t) => t.x < 105).map((t) => t.s).join(" ").replace(/\s+/g, " ").trim();
-      const descMax = revCand.length ? revCand[revCand.length - 1].t.x : valStartX;
-      const desc = r.filter((t) => t.x >= 105 && t.x < descMax && !isNum(t.s)).map((t) => t.s).join(" ").replace(/\s+/g, " ").trim();
+      // adaptive code/desc: όλα αριστερά του κωδ. αναθεώρησης (όχι fixed x-bands)
+      const cutX = revCand.length ? revCand[revCand.length - 1].t.x : valStartX;
+      const leftToks = r.filter((t) => t.x < cutX).sort((a, b) => a.x - b.x);
+      const articleCode = leftToks[0]?.s ?? "";
+      const ownDesc = leftToks.slice(1).filter((t) => !isNum(t.s)).map((t) => t.s).join(" ");
+      const desc = `${pending} ${ownDesc}`.replace(/\s+/g, " ").trim().slice(0, 220);
+      pending = "";
 
       out.push({ group: group || "—", articleCode, desc, revCode, unit, qty, price, dapani });
     }
