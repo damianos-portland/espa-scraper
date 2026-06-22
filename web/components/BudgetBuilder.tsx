@@ -5,7 +5,7 @@ import * as xlsx from "xlsx";
 import { ANATH, resolve } from "@/lib/anatheorisi";
 import { type BudgetRow, calcBudget, dapani, eur, myCost, pct, sectionOf } from "@/lib/budget";
 import { parseExtractedJson, parseFatherXlsx } from "@/lib/budget-import";
-import { evaluate } from "@/lib/evaluator";
+import { BENCHMARKS, dominantCategory, evaluate } from "@/lib/evaluator";
 
 const KEY = "espa-radar-budget-v1";
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -25,21 +25,32 @@ export default function BudgetBuilder() {
   const [rows, setRows] = useState<BudgetRow[]>([]);
   const [discounts, setDiscounts] = useState<Record<string, number>>({});
   const [quarter, setQuarter] = useState(ANATH.defaultQuarter);
+  const [costFactor, setCostFactor] = useState(0.7); // εκτιμώμενο κόστος ως % μελέτης
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const s = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (s?.rows) { setRows(s.rows); setDiscounts(s.discounts ?? {}); setQuarter(s.quarter ?? ANATH.defaultQuarter); }
+      if (s?.rows) { setRows(s.rows); setDiscounts(s.discounts ?? {}); setQuarter(s.quarter ?? ANATH.defaultQuarter); if (s.costFactor != null) setCostFactor(s.costFactor); }
     } catch {}
     setLoaded(true);
   }, []);
   useEffect(() => {
-    if (loaded) localStorage.setItem(KEY, JSON.stringify({ rows, discounts, quarter }));
-  }, [rows, discounts, quarter, loaded]);
+    if (loaded) localStorage.setItem(KEY, JSON.stringify({ rows, discounts, quarter, costFactor }));
+  }, [rows, discounts, quarter, costFactor, loaded]);
 
-  const calc = useMemo(() => calcBudget(rows, discounts), [rows, discounts]);
+  const calc = useMemo(() => calcBudget(rows, discounts, costFactor), [rows, discounts, costFactor]);
   const evalResult = useMemo(() => evaluate(rows, calc), [rows, calc]);
+
+  // γρήγορη εφαρμογή τυπικής έκπτωσης αγοράς ανά ομάδα (κυρίαρχη κατηγορία)
+  const applyMarketDiscount = () => {
+    const cat = dominantCategory(rows);
+    const [lo, hi] = BENCHMARKS[cat] ?? [0.3, 0.45];
+    const mid = (lo + hi) / 2;
+    const next: Record<string, number> = {};
+    for (const g of calc.groups) next[g.group] = mid;
+    setDiscounts(next);
+  };
 
   const fileRef = useRef<HTMLInputElement>(null);
   const update = (id: string, patch: Partial<BudgetRow>) =>
@@ -186,7 +197,9 @@ export default function BudgetBuilder() {
       )}
 
       {/* evaluator scorecard */}
-      {calc.groups.length > 0 && <Evaluator e={evalResult} />}
+      {calc.groups.length > 0 && (
+        <Evaluator e={evalResult} costFactor={costFactor} setCostFactor={setCostFactor} onApplyMarket={applyMarketDiscount} manualCost={calc.matTotal + calc.labTotal > 0} />
+      )}
     </div>
   );
 }
@@ -198,7 +211,7 @@ const VERDICT_STYLE: Record<string, { cls: string; icon: string }> = {
   ΑΝΕΠΑΡΚΗ: { cls: "bg-slate-400", icon: "⚪" },
 };
 
-function Evaluator({ e }: { e: ReturnType<typeof evaluate> }) {
+function Evaluator({ e, costFactor, setCostFactor, onApplyMarket, manualCost }: { e: ReturnType<typeof evaluate>; costFactor: number; setCostFactor: (n: number) => void; onApplyMarket: () => void; manualCost: boolean }) {
   const v = VERDICT_STYLE[e.verdict];
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
@@ -208,6 +221,20 @@ function Evaluator({ e }: { e: ReturnType<typeof evaluate> }) {
         </span>
         <h3 className="text-sm font-bold text-ink">Αξιολόγηση προσφοράς</h3>
         <span className="text-[12px] text-slate-500">κυρίαρχη κατηγορία: <b>{e.category}</b></span>
+      </div>
+
+      {/* auto-fill controls: κόστος ως % μελέτης + τυπική έκπτωση αγοράς */}
+      <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-slate-50 px-3 py-2 text-[12px] ring-1 ring-slate-100">
+        <label className="flex items-center gap-2">
+          <span className="text-slate-500">Εκτιμώμενο κόστος εκτέλεσης:</span>
+          <input type="range" min={40} max={95} value={Math.round(costFactor * 100)} onChange={(ev) => setCostFactor(Number(ev.target.value) / 100)} className="accent-sky-700" />
+          <b className="tabular-nums text-ink">{Math.round(costFactor * 100)}%</b>
+          <span className="text-slate-400">της μελέτης</span>
+        </label>
+        {manualCost ? <span className="text-emerald-600">✓ χρησιμοποιεί χειροκίνητο κόστος όπου δόθηκε</span> : null}
+        <button onClick={onApplyMarket} className="ml-auto rounded-lg bg-white px-2.5 py-1 font-medium text-sky-700 ring-1 ring-sky-200 hover:bg-sky-50">
+          Εφαρμογή τυπικής έκπτωσης αγοράς
+        </button>
       </div>
 
       {e.verdict === "ΑΝΕΠΑΡΚΗ" ? (

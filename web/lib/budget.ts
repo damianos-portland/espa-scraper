@@ -49,7 +49,11 @@ export interface BudgetCalc {
   labTotal: number;
 }
 
-export function calcBudget(rows: BudgetRow[], discounts: Record<string, number>): BudgetCalc {
+/**
+ * @param costFactor εκτιμώμενο κόστος ως κλάσμα της τιμής μελέτης (π.χ. 0.70),
+ *   για άρθρα χωρίς χειροκίνητο κόστος — ώστε ο evaluator να γεμίζει αυτόματα.
+ */
+export function calcBudget(rows: BudgetRow[], discounts: Record<string, number>, costFactor = 0): BudgetCalc {
   const byGroup = new Map<string, number>();
   for (const r of rows) byGroup.set(r.group || "—", (byGroup.get(r.group || "—") ?? 0) + dapani(r));
 
@@ -78,12 +82,17 @@ export function calcBudget(rows: BudgetRow[], discounts: Record<string, number>)
 
   const matTotal = rows.reduce((a, r) => a + (r.costMat || 0), 0);
   const labTotal = rows.reduce((a, r) => a + (r.costLab || 0), 0);
+  // ενεργό κόστος: χειροκίνητο αν δόθηκε, αλλιώς εκτίμηση costFactor × δαπάνη μελέτης
+  const costTotal = rows.reduce(
+    (a, r) => a + (myCost(r) > 0 ? myCost(r) : costFactor > 0 ? costFactor * dapani(r) : 0),
+    0,
+  );
 
   return {
     groups, meletiTotal, prosforaTotal, Em, lower, upper,
     allAcceptable: groups.every((g) => g.acceptable),
     geoe, subTotal, aprovlepta, grandTotal,
-    costTotal: matTotal + labTotal, matTotal, labTotal,
+    costTotal, matTotal, labTotal,
   };
 }
 
