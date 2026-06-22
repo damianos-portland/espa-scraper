@@ -10,6 +10,9 @@ import { downloadMeleti, extractBudget } from "./extract-budget.js";
  */
 const PORT = 8787;
 
+const withTimeout = <T>(p: Promise<T>, ms: number, msg: string): Promise<T> =>
+  Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
+
 async function sysFromAda(ada: string): Promise<string> {
   const text = await fetchPdfText(`https://diavgeia.gov.gr/doc/${ada}`, 25000);
   const m = text.match(/pwgopendata[^\s)"']*?search\/(\d{5,7})/i) || text.match(/συστ[ηή]μ[^.]{0,30}?(\d{6})/i);
@@ -26,12 +29,12 @@ const server = createServer(async (req, res) => {
   try {
     let sys = url.searchParams.get("sys") ?? "";
     const ada = url.searchParams.get("ada");
-    if (!sys && ada) { process.stdout.write(`[${ada}] εύρεση συστήματος… `); sys = await sysFromAda(ada); console.log(sys); }
+    if (!sys && ada) { process.stdout.write(`[${ada}] εύρεση συστήματος… `); sys = await withTimeout(sysFromAda(ada), 30000, "Δεν βρέθηκε αρ. συστήματος στη διακήρυξη (timeout)."); console.log(sys); }
     if (!sys) throw new Error("Δώσε ?sys=<ΑΑ> ή ?ada=<ΑΔΑ>.");
 
     console.log(`[${sys}] κατέβασμα + εξαγωγή…`);
-    const pdfPath = await downloadMeleti(sys);
-    const rows = await extractBudget(pdfPath);
+    const pdfPath = await withTimeout(downloadMeleti(sys), 60000, "Το κατέβασμα από ΕΣΗΔΗΣ άργησε — άτυπο/μη διαθέσιμο αρχείο (timeout).");
+    const rows = await withTimeout(extractBudget(pdfPath), 45000, "Η εξαγωγή του PDF άργησε (timeout).");
     const total = rows.reduce((a, r) => a + r.dapani, 0);
     console.log(`[${sys}] ✓ ${rows.length} άρθρα · ${total.toLocaleString("el-GR")} €`);
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });

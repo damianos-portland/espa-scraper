@@ -24,20 +24,25 @@ export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tend
 
   async function loadBudget() {
     setLoading(true); setErr(null);
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 130000); // ~2 λεπτά max
     try {
-      const res = await fetch(`${BUDGET_API}/extract?ada=${encodeURIComponent(t.id)}`);
+      const res = await fetch(`${BUDGET_API}/extract?ada=${encodeURIComponent(t.id)}`, { signal: ctrl.signal });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || `σφάλμα ${res.status}`);
       const rows = parseExtractedJson(JSON.stringify(data));
-      if (!rows.length) throw new Error("Δεν εξήχθησαν άρθρα.");
+      if (!rows.length) throw new Error("Δεν εξήχθησαν άρθρα από τη μελέτη (άτυπο/scanned έγγραφο).");
       onLoadBudget?.(rows);
       onClose();
     } catch (e) {
       const m = (e as Error).message;
-      setErr(/fetch|Failed|NetworkError|load failed/i.test(m)
-        ? "Ο companion δεν τρέχει. Τρέξε «npm run budget-api» στο espa-radar."
-        : m);
+      setErr(
+        /abort/i.test(m) ? "Άργησε πολύ (timeout). Δοκίμασε άλλον διαγωνισμό ή «Import xls»."
+        : /fetch|Failed|NetworkError|load failed/i.test(m) ? "Ο companion δεν τρέχει. Τρέξε «npm run budget-api» στο espa-radar."
+        : m,
+      );
     } finally {
+      clearTimeout(to);
       setLoading(false);
     }
   }
