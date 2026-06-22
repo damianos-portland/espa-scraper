@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Tender } from "@/lib/types";
 import { fmtDate, fmtEuro } from "@/lib/format";
+import { parseExtractedJson } from "@/lib/budget-import";
+import type { BudgetRow } from "@/lib/budget";
+
+const BUDGET_API = "http://localhost:8787";
 
 function Fact({ label, value, strong }: { label: string; value?: React.ReactNode; strong?: boolean }) {
   if (value == null || value === "") return null;
@@ -14,7 +18,30 @@ function Fact({ label, value, strong }: { label: string; value?: React.ReactNode
   );
 }
 
-export default function TenderModal({ tender: t, onClose }: { tender: Tender; onClose: () => void }) {
+export default function TenderModal({ tender: t, onClose, onLoadBudget }: { tender: Tender; onClose: () => void; onLoadBudget?: (rows: BudgetRow[]) => void }) {
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function loadBudget() {
+    setLoading(true); setErr(null);
+    try {
+      const res = await fetch(`${BUDGET_API}/extract?ada=${encodeURIComponent(t.id)}`);
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || `σφάλμα ${res.status}`);
+      const rows = parseExtractedJson(JSON.stringify(data));
+      if (!rows.length) throw new Error("Δεν εξήχθησαν άρθρα.");
+      onLoadBudget?.(rows);
+      onClose();
+    } catch (e) {
+      const m = (e as Error).message;
+      setErr(/fetch|Failed|NetworkError|load failed/i.test(m)
+        ? "Ο companion δεν τρέχει. Τρέξε «npm run budget-api» στο espa-radar."
+        : m);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -70,6 +97,11 @@ export default function TenderModal({ tender: t, onClose }: { tender: Tender; on
 
           {/* actions */}
           <div className="mt-4 flex flex-wrap gap-2">
+            {onLoadBudget && isWork ? (
+              <button onClick={loadBudget} disabled={loading} className="rounded-xl bg-sky-700 px-4 py-2 text-[13px] font-semibold text-white hover:bg-sky-800 disabled:opacity-50">
+                {loading ? "⏳ Εξαγωγή…" : "📐 Φόρτωση προϋπολογισμού"}
+              </button>
+            ) : null}
             <a href={t.documentUrl} target="_blank" rel="noreferrer" className="rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-ink">
               📄 Άνοιγμα διακήρυξης
             </a>
@@ -80,6 +112,7 @@ export default function TenderModal({ tender: t, onClose }: { tender: Tender; on
               Αναζήτηση ΕΣΗΔΗΣ ↗
             </a>
           </div>
+          {err ? <p className="mt-2 text-[12px] text-rose-600">{err}</p> : null}
         </div>
       </div>
     </div>

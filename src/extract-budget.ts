@@ -6,22 +6,10 @@ import { readFileSync, writeFileSync } from "node:fs";
  *   npm run extract-budget -- /path/to/meleti.pdf [out.json]
  */
 
-// όρια στηλών κατά x (από recon σε τυπική μελέτη ΕΣΗΔΗΣ)
-const COL = {
-  code: [0, 105],
-  desc: [105, 310],
-  rev: [310, 388],
-  unit: [388, 425],
-  price: [425, 495],
-  qty: [495, 540],
-  dapani: [540, 640],
-} as const;
-
 const numGR = (s: string) => {
   const n = parseFloat(s.replace(/\./g, "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 };
-const inBand = (x: number, [a, b]: readonly [number, number]) => x >= a && x < b;
 
 export interface ExtractedRow {
   group: string;
@@ -58,35 +46,46 @@ export async function extractBudget(pdfPath: string): Promise<ExtractedRow[]> {
 
     for (const r of rows) {
       const joined = r.map((i) => i.s).join(" ");
-      if (/^\s*Π\s*Ρ\s*Ο\s*[ΫΥ]/.test(joined) || /ΠΡΟ[ΫΥ]ΠΟΛΟΓΙΣΜΟΣ ΜΕΛΕΤΗΣ|Κωδικός Άρθρου/.test(joined)) inBudget = true;
+      // ανίχνευση πίνακα προϋπολογισμού (πολλαπλά σήματα για robustness σε διαφορετικά layouts)
+      if (/ΠΡΟ[ΫΥ]ΠΟΛΟΓΙΣΜΟΣ ΜΕΛΕΤΗΣ|Κωδικός Άρθρου|Άρθρο Αναθεώρησης/.test(joined) || (/Ποσότητα/.test(joined) && /Δαπάνη/.test(joined))) inBudget = true;
       const gm = joined.match(/ΟΜΑΔΑ\s+([Α-Ω0-9]+)\s*:?\s*(.*)/);
       if (gm) { inBudget = true; group = (gm[2] || gm[1]).replace(/\s+/g, " ").replace(/Σύνολο.*/i, "").replace(/[\s-]+$/, "").replace(/\s*-\s*/g, "-").trim().slice(0, 50) || `ΟΜΑΔΑ ${gm[1]}`; continue; }
       if (!inBudget) continue;
       if (/ΓΕΝΙΚΗ ΣΥΓΓΡΑΦΗ|ΕΙΔΙΚΗ ΣΥΓΓΡΑΦΗ|ΤΙΜΟΛΟΓΙΟ ΜΕΛΕΤΗΣ/.test(joined)) inBudget = false;
 
-      const pick = (band: readonly [number, number]) => r.filter((i) => inBand(i.x, band)).map((i) => i.s);
-      const revRaw = pick(COL.rev).join(" ").replace(/\s+/g, " ").trim();
-      // κωδικός αναθεώρησης = απαραίτητος δείκτης γραμμής δεδομένων
-      if (!/(ΟΙΚ|ΥΔΡ|ΗΛΜ|ΟΔΟ|ΠΡΣ|ΛΙΜ|ΝΟΔΟ)/.test(revRaw.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, ""))) continue;
+      // ── adaptive parsing: άγκυρα = ΜΟΝΑΔΑ + τελικά νούμερα (ο κωδ. αναθ. προαιρετικός) ──
+      // latin-fix: λατινικά lookalikes -> ελληνικά (π.χ. «OIK» -> «ΟΙΚ»)
+      const LAT: Record<string, string> = { A: "Α", B: "Β", E: "Ε", H: "Η", I: "Ι", K: "Κ", M: "Μ", N: "Ν", O: "Ο", P: "Ρ", T: "Τ", X: "Χ", Y: "Υ", Z: "Ζ" };
+      const grk = (s: string) => s.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[A-Z]/g, (c) => LAT[c] ?? c);
+      const REV = /^(ΟΙΚ|ΥΔΡ|ΗΛΜ|ΟΔΟ|ΠΡΣ|ΛΙΜ|ΝΟΔΟ|ΑΤΗΕ|ΑΤΟΕ|ΑΤΛΕ|ΝΑ)/;
+      const isNum = (s: string) => /^\d[\d.,]*$/.test(s);
 
-      // αριθμοί κατά x: τα 3 τελευταία = τιμή, ποσότητα, δαπάνη (robust σε μετατόπιση)
-      const nums = r.filter((i) => i.x > 400 && /^\d[\d.,]*$/.test(i.s));
-      if (nums.length < 2) continue;
-      const dapani = numGR(nums[nums.length - 1].s);
-      const qty = numGR(nums[nums.length - 2].s);
-      const price = nums.length >= 3 ? numGR(nums[nums.length - 3].s) : (qty ? dapani / qty : 0);
+      // τελικά νούμερα = τιμή, ποσότητα, δαπάνη· η δαπάνη πρέπει να είναι money (,dd)
+      const numToks = r.filter((t) => isNum(t.s));
+      if (numToks.length < 2 || !/,\d{2}$/.test(numToks[numToks.length - 1].s)) continue;
+      const dapani = numGR(numToks[numToks.length - 1].s);
       if (dapani <= 0) continue;
+      const qty = numGR(numToks[numToks.length - 2].s);
+      const price = numToks.length >= 3 ? numGR(numToks[numToks.length - 3].s) : (qty ? dapani / qty : 0);
+      const valStartX = numToks[Math.max(0, numToks.length - 3)].x;
 
-      // μονάδα = μη-αριθμητικό token πριν τους αριθμούς (x 385–430)
-      const unit = r.filter((i) => inBand(i.x, [385, 430]) && !/^\d/.test(i.s)).map((i) => i.s).join("") || "τεμ";
+      // μονάδα = μη-αριθμητικό token ακριβώς αριστερά των value columns
+      const unit = r.filter((t) => !isNum(t.s) && t.x > 340 && t.x < valStartX).map((t) => t.s).pop() ?? "τεμ";
 
-      out.push({
-        group: group || "—",
-        articleCode: pick(COL.code).join(" ").replace(/\s+/g, " ").trim(),
-        desc: pick(COL.desc).join(" ").replace(/\s+/g, " ").trim(),
-        revCode: revRaw.replace(/([Α-Ω]+)[\s-]+(\d)/, "$1 $2"),
-        unit, qty, price, dapani,
-      });
+      // κωδ. αναθεώρησης (προαιρετικός): δεξιότερο token που ταιριάζει σε REV (x>120)
+      let revCode = "";
+      const revCand = r.map((t) => ({ t, c: grk(t.s) })).filter((o) => o.t.x > 120 && o.t.x < valStartX && REV.test(o.c)).sort((a, b) => b.t.x - a.t.x);
+      if (revCand.length) {
+        const o = revCand[0]; revCode = o.c.replace(/[\s-]+/g, " ").trim();
+        const idx = r.indexOf(o.t);
+        if (!/\d/.test(revCode) && r[idx + 1] && /^[Ν\d][\d.]*$/.test(r[idx + 1].s)) revCode = `${revCode} ${r[idx + 1].s}`;
+      }
+
+      const articleCode = r.filter((t) => t.x < 105).map((t) => t.s).join(" ").replace(/\s+/g, " ").trim();
+      const descMax = revCand.length ? revCand[revCand.length - 1].t.x : valStartX;
+      const desc = r.filter((t) => t.x >= 105 && t.x < descMax && !isNum(t.s)).map((t) => t.s).join(" ").replace(/\s+/g, " ").trim();
+
+      out.push({ group: group || "—", articleCode, desc, revCode, unit, qty, price, dapani });
     }
   }
   return out;

@@ -10,6 +10,7 @@ import TenderCard from "@/components/TenderCard";
 import TenderModal from "@/components/TenderModal";
 import BudgetBuilder from "@/components/BudgetBuilder";
 import type { Tender } from "@/lib/types";
+import type { BudgetRow } from "@/lib/budget";
 
 const data = rawData as unknown as Dataset;
 const TENDERS = "__tenders__";
@@ -35,6 +36,12 @@ export default function Page() {
   const tendersMode = tab === TENDERS;
   const budgetMode = tab === BUDGET;
   const activeProfile = data.profiles.find((p) => p.id === tab);
+
+  // φόρτωση εξαγμένου προϋπολογισμού (από tender modal) στο tab «Προϋπολογισμός»
+  const loadBudget = (rows: BudgetRow[]) => {
+    localStorage.setItem("espa-radar-budget-v1", JSON.stringify({ rows, discounts: {} }));
+    setTab(BUDGET);
+  };
   const updated = fmtDate(data.generatedAt.slice(0, 10));
 
   // αποφυγή hydration mismatch: η σχετική ημ/νία λήξης («λήγει σε Χ μέρες»)
@@ -100,7 +107,7 @@ export default function Page() {
       {budgetMode ? (
         <BudgetBuilder />
       ) : tendersMode ? (
-        <TendersView />
+        <TendersView onLoadBudget={loadBudget} />
       ) : (
         <CallsView tab={tab} activeProfile={activeProfile} updated={updated} />
       )}
@@ -230,7 +237,7 @@ const parseNum = (s: string) => {
   return s.trim() && Number.isFinite(n) ? n : undefined;
 };
 
-function TendersView() {
+function TendersView({ onLoadBudget }: { onLoadBudget: (rows: BudgetRow[]) => void }) {
   const [q, setQ] = useState("");
   const [types, setTypes] = useState<Set<string>>(new Set());
   const [cats, setCats] = useState<Set<string>>(new Set());
@@ -350,7 +357,7 @@ function TendersView() {
         </Grid>
       )}
 
-      {selected ? <TenderModal tender={selected} onClose={() => setSelected(null)} /> : null}
+      {selected ? <TenderModal tender={selected} onClose={() => setSelected(null)} onLoadBudget={onLoadBudget} /> : null}
     </>
   );
 }
