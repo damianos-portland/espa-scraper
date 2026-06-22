@@ -1,18 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as xlsx from "xlsx";
 import { ANATH, resolve } from "@/lib/anatheorisi";
-import { type BudgetRow, calcBudget, dapani, eur, pct } from "@/lib/budget";
+import { type BudgetRow, calcBudget, dapani, eur, myCost, pct, sectionOf } from "@/lib/budget";
+import { parseFatherXlsx } from "@/lib/budget-import";
+import { evaluate } from "@/lib/evaluator";
 
 const KEY = "espa-radar-budget-v1";
 const uid = () => Math.random().toString(36).slice(2, 9);
+const mk = (o: Partial<BudgetRow>): BudgetRow => ({
+  id: uid(), desc: "", articleCode: "", revCode: "", unit: "", qty: 0, price: 0,
+  group: "ΛΟΙΠΑ", section: "ΟΙΚ", costMat: 0, costLab: 0, ...o,
+});
 
 const SAMPLE: BudgetRow[] = [
-  { id: uid(), desc: "Γενικές εκσκαφές σε έδαφος γαιώδες", articleCode: "ΝΑΟΙΚ 20.02", revCode: "ΟΙΚ 2112", unit: "m3", qty: 4500, price: 5.65, group: "ΧΩΜΑΤΟΥΡΓΙΚΑ" },
-  { id: uid(), desc: "Ικριώματα ειδικά", articleCode: "ΝΑΟΙΚ 23.01", revCode: "ΟΙΚ 2301", unit: "m3", qty: 100, price: 5, group: "ΙΚΡΙΩΜΑΤΑ" },
-  { id: uid(), desc: "Ξυλότυποι συνήθων χυτών κατασκευών", articleCode: "ΝΑΟΙΚ 38.03", revCode: "ΟΙΚ 3816", unit: "m2", qty: 950, price: 14, group: "ΣΚΥΡΟΔΕΜΑΤΑ" },
-  { id: uid(), desc: "Σκυρόδεμα κατηγορίας C12/15", articleCode: "ΝΑΟΙΚ 32.01.03", revCode: "ΟΙΚ 3213", unit: "m3", qty: 140, price: 75, group: "ΣΚΥΡΟΔΕΜΑΤΑ" },
+  mk({ desc: "Γενικές εκσκαφές σε έδαφος γαιώδες", articleCode: "ΝΑΟΙΚ 20.02", revCode: "ΟΙΚ 2112", unit: "m3", qty: 4500, price: 5.65, group: "ΧΩΜΑΤΟΥΡΓΙΚΑ", costMat: 8000, costLab: 14000 }),
+  mk({ desc: "Ικριώματα ειδικά", articleCode: "ΝΑΟΙΚ 23.01", revCode: "ΟΙΚ 2301", unit: "m3", qty: 100, price: 5, group: "ΙΚΡΙΩΜΑΤΑ", costMat: 200, costLab: 220 }),
+  mk({ desc: "Ξυλότυποι συνήθων χυτών κατασκευών", articleCode: "ΝΑΟΙΚ 38.03", revCode: "ΟΙΚ 3816", unit: "m2", qty: 950, price: 14, group: "ΣΚΥΡΟΔΕΜΑΤΑ", costMat: 5500, costLab: 6500 }),
+  mk({ desc: "Σκυρόδεμα κατηγορίας C12/15", articleCode: "ΝΑΟΙΚ 32.01.03", revCode: "ΟΙΚ 3213", unit: "m3", qty: 140, price: 75, group: "ΣΚΥΡΟΔΕΜΑΤΑ", costMat: 7000, costLab: 2500 }),
 ];
 
 export default function BudgetBuilder() {
@@ -33,25 +39,41 @@ export default function BudgetBuilder() {
   }, [rows, discounts, quarter, loaded]);
 
   const calc = useMemo(() => calcBudget(rows, discounts), [rows, discounts]);
+  const evalResult = useMemo(() => evaluate(rows, calc), [rows, calc]);
 
+  const fileRef = useRef<HTMLInputElement>(null);
   const update = (id: string, patch: Partial<BudgetRow>) =>
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  const addRow = () =>
-    setRows((rs) => [...rs, { id: uid(), desc: "", articleCode: "", revCode: "", unit: "", qty: 0, price: 0, group: rs.at(-1)?.group ?? "ΝΕΑ ΟΜΑΔΑ" }]);
+  const addRow = () => setRows((rs) => [...rs, mk({ group: rs.at(-1)?.group ?? "ΝΕΑ ΟΜΑΔΑ" })]);
   const del = (id: string) => setRows((rs) => rs.filter((r) => r.id !== id));
+
+  async function importXlsx(file: File) {
+    try {
+      const wb = xlsx.read(await file.arrayBuffer());
+      const imported = parseFatherXlsx(wb);
+      if (!imported.length) return alert("Δεν βρέθηκαν άρθρα. Περίμενα φύλλα «ΠΡΟΥΠΟΛΟΓΙΣΜΟΣ …» στη μορφή του πατέρα.");
+      setRows(imported);
+      setDiscounts({});
+    } catch (e) {
+      alert("Σφάλμα ανάγνωσης αρχείου: " + (e as Error).message);
+    }
+  }
+
+  function itemsSheet(secRows: BudgetRow[]) {
+    const head = ["Α/Α", "Είδος εργασίας", "Κωδ. Άρθρου", "Κωδ. Αναθ/σης", "Ομοειδές", `Συντ. ${quarter}`, "Μονάδα", "Ποσότητα", "Τιμή", "Δαπάνη", "Υλικά", "Εργατικά", "Κόστος", "Ομάδα"];
+    const body = secRows.map((r, i) => {
+      const res = resolve(r.revCode, quarter, r.omoeides);
+      const coeff = res.status === "missing" ? "" : res.coeff ?? "";
+      const via = res.status === "omoeides" ? res.via : "";
+      return [i + 1, r.desc, r.articleCode, r.revCode, via, coeff, r.unit, r.qty, r.price, dapani(r), r.costMat, r.costLab, myCost(r), r.group];
+    });
+    return xlsx.utils.aoa_to_sheet([head, ...body]);
+  }
 
   function exportXlsx() {
     const wb = xlsx.utils.book_new();
-    const items = [
-      ["Α/Α", "Είδος εργασίας", "Κωδ. Άρθρου", "Κωδ. Αναθ/σης", "Ομοειδές", `Συντ. ${quarter}`, "Μονάδα", "Ποσότητα", "Τιμή", "Δαπάνη", "Ομάδα"],
-      ...rows.map((r, i) => {
-        const res = resolve(r.revCode, quarter, r.omoeides);
-        const coeff = res.status === "missing" ? "" : res.coeff ?? "";
-        const via = res.status === "omoeides" ? res.via : "";
-        return [i + 1, r.desc, r.articleCode, r.revCode, via, coeff, r.unit, r.qty, r.price, dapani(r), r.group];
-      }),
-    ];
-    xlsx.utils.book_append_sheet(wb, xlsx.utils.aoa_to_sheet(items), "ΠΡΟΫΠΟΛΟΓΙΣΜΟΣ");
+    xlsx.utils.book_append_sheet(wb, itemsSheet(rows.filter((r) => r.section === "ΟΙΚ")), "ΠΡΟΫΠΟΛΟΓΙΣΜΟΣ ΟΙΚΟΔΟΜΙΚΩΝ");
+    xlsx.utils.book_append_sheet(wb, itemsSheet(rows.filter((r) => r.section === "ΗΜ")), "ΠΡΟΫΠΟΛΟΓΙΣΜΟΣ ΗΜ");
 
     const sg = [["Α/Α", "Ομάδα", "Μελέτη", "Έκπτωση", "Προσφορά"]];
     calc.groups.forEach((g, i) => sg.push([String(i + 1), g.group, g.meleti.toFixed(2), pct(g.discount), g.prosfora.toFixed(2)]));
@@ -81,6 +103,8 @@ export default function BudgetBuilder() {
       {/* toolbar */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <button onClick={addRow} className="rounded-xl bg-navy px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-ink">+ Άρθρο</button>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importXlsx(f); e.target.value = ""; }} />
+        <button onClick={() => fileRef.current?.click()} className="rounded-xl bg-white px-3 py-1.5 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">⬆ Import xls</button>
         <button onClick={() => { setRows(SAMPLE.map((r) => ({ ...r, id: uid() }))); setDiscounts({}); }} className="rounded-xl bg-white px-3 py-1.5 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">Φόρτωση παραδείγματος</button>
         <button onClick={exportXlsx} disabled={!rows.length} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">⬇ Export Excel</button>
         {rows.length ? <button onClick={() => { setRows([]); setDiscounts({}); }} className="text-[12px] font-medium text-rose-600 hover:underline">καθαρισμός</button> : null}
@@ -102,7 +126,7 @@ export default function BudgetBuilder() {
           <table className="w-full min-w-[1000px] text-[12px]">
             <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-400">
               <tr>
-                {["Είδος εργασίας", "Κωδ. Άρθρου", "Κωδ. Αναθ.", "Αναθεώρηση", "Μον.", "Ποσότ.", "Τιμή", "Δαπάνη", "Ομάδα", ""].map((h) => (
+                {["Είδος εργασίας", "Κωδ. Άρθρου", "Κωδ. Αναθ.", "Αναθεώρηση", "Μον.", "Ποσότ.", "Τιμή", "Δαπάνη", "Υλικά €", "Εργατικά €", "Ομάδα", ""].map((h) => (
                   <th key={h} className="px-2 py-2 text-left font-semibold">{h}</th>
                 ))}
               </tr>
@@ -159,6 +183,57 @@ export default function BudgetBuilder() {
           </div>
         </div>
       )}
+
+      {/* evaluator scorecard */}
+      {calc.groups.length > 0 && <Evaluator e={evalResult} />}
+    </div>
+  );
+}
+
+const VERDICT_STYLE: Record<string, { cls: string; icon: string }> = {
+  ΑΞΙΖΕΙ: { cls: "bg-emerald-600", icon: "🟢" },
+  ΟΡΙΑΚΟ: { cls: "bg-amber-500", icon: "🟡" },
+  ΟΧΙ: { cls: "bg-rose-600", icon: "🔴" },
+  ΑΝΕΠΑΡΚΗ: { cls: "bg-slate-400", icon: "⚪" },
+};
+
+function Evaluator({ e }: { e: ReturnType<typeof evaluate> }) {
+  const v = VERDICT_STYLE[e.verdict];
+  return (
+    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-bold text-white ${v.cls}`}>
+          {v.icon} {e.verdict}
+        </span>
+        <h3 className="text-sm font-bold text-ink">Αξιολόγηση προσφοράς</h3>
+        <span className="text-[12px] text-slate-500">κυρίαρχη κατηγορία: <b>{e.category}</b></span>
+      </div>
+
+      {e.verdict === "ΑΝΕΠΑΡΚΗ" ? (
+        <p className="mt-3 text-[13px] text-slate-500">{e.reasons[0]}</p>
+      ) : (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] sm:grid-cols-4">
+            <Metric label="Η έκπτωσή σας (Εμ)" value={pct(e.yourDiscount)} />
+            <Metric label="Τυπική αγοράς" value={pct(e.expectedDiscount)} sub={e.gap >= 0 ? "ανταγωνιστικό ✓" : `${(e.gap * 100).toFixed(0)} μον.`} subCls={e.gap >= -0.03 ? "text-emerald-600" : "text-rose-600"} />
+            <Metric label="Έσοδα / Κόστος" value={`${eur(e.revenue)}`} sub={`κόστος ${eur(e.cost)}`} />
+            <Metric label="Περιθώριο" value={pct(e.marginPct)} sub={`${e.margin >= 0 ? "+" : ""}${eur(e.margin)}`} subCls={e.marginPct >= 0.08 ? "text-emerald-600" : e.marginPct >= 0 ? "text-amber-600" : "text-rose-600"} />
+          </div>
+          <ul className="mt-3 space-y-1 text-[12px] text-slate-600">
+            {e.reasons.map((r, i) => <li key={i}>• {r}</li>)}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Metric({ label, value, sub, subCls = "text-slate-400" }: { label: string; value: string; sub?: string; subCls?: string }) {
+  return (
+    <div className="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="mt-0.5 text-sm font-bold text-ink tabular-nums">{value}</div>
+      {sub ? <div className={`text-[11px] tabular-nums ${subCls}`}>{sub}</div> : null}
     </div>
   );
 }
@@ -176,6 +251,8 @@ function Row({ r, quarter, onChange, onDelete }: { r: BudgetRow; quarter: string
       <td><input type="number" className={`${inp} w-20 text-right tabular-nums`} value={r.qty || ""} onChange={(e) => onChange({ qty: parseFloat(e.target.value) || 0 })} /></td>
       <td><input type="number" className={`${inp} w-20 text-right tabular-nums`} value={r.price || ""} onChange={(e) => onChange({ price: parseFloat(e.target.value) || 0 })} /></td>
       <td className="px-2 text-right tabular-nums font-medium">{eur(dapani(r))}</td>
+      <td><input type="number" className={`${inp} w-20 text-right tabular-nums`} value={r.costMat || ""} onChange={(e) => onChange({ costMat: parseFloat(e.target.value) || 0 })} placeholder="0" /></td>
+      <td><input type="number" className={`${inp} w-20 text-right tabular-nums`} value={r.costLab || ""} onChange={(e) => onChange({ costLab: parseFloat(e.target.value) || 0 })} placeholder="0" /></td>
       <td><input className={`${inp} w-32`} value={r.group} onChange={(e) => onChange({ group: e.target.value })} /></td>
       <td><button onClick={onDelete} className="px-1 text-slate-300 hover:text-rose-500">✕</button></td>
     </tr>

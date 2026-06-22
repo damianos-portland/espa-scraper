@@ -1,5 +1,7 @@
 /** Υπολογισμοί προϋπολογισμού + έλεγχος ομαλότητας (Ν.4412/2016 άρθρο 95 §2α). */
 
+export type Section = "ΟΙΚ" | "ΗΜ"; // ΟΙΚΟΔΟΜΙΚΩΝ ή Η/Μ (για split sheets)
+
 export interface BudgetRow {
   id: string;
   desc: string;       // είδος εργασίας
@@ -8,11 +10,19 @@ export interface BudgetRow {
   omoeides?: string;   // ρητός ομοειδής (όταν ο revCode δεν είναι εκδοθείς)
   unit: string;
   qty: number;
-  price: number;
+  price: number;       // τιμή μελέτης (ανά μονάδα)
   group: string;       // ομάδα ομοειδών εργασιών
+  section: Section;    // ΟΙΚ / ΗΜ
+  costMat: number;     // δικό σας κόστος — υλικά (σύνολο €)
+  costLab: number;     // δικό σας κόστος — εργατικά (σύνολο €)
 }
 
 export const dapani = (r: BudgetRow) => (r.qty || 0) * (r.price || 0);
+export const myCost = (r: BudgetRow) => (r.costMat || 0) + (r.costLab || 0);
+
+/** ΟΙΚ/ΗΜ από το prefix του κωδικού αναθεώρησης (ΗΛΜ → ΗΜ, αλλιώς ΟΙΚ). */
+export const sectionOf = (revCode: string): Section =>
+  /ΗΛΜ/i.test(revCode.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "")) ? "ΗΜ" : "ΟΙΚ";
 
 export interface GroupCalc {
   group: string;
@@ -34,6 +44,9 @@ export interface BudgetCalc {
   subTotal: number;
   aprovlepta: number; // 15%
   grandTotal: number;
+  costTotal: number;  // δικό σας άμεσο κόστος (υλικά+εργατικά)
+  matTotal: number;
+  labTotal: number;
 }
 
 export function calcBudget(rows: BudgetRow[], discounts: Record<string, number>): BudgetCalc {
@@ -63,10 +76,14 @@ export function calcBudget(rows: BudgetRow[], discounts: Record<string, number>)
   const aprovlepta = subTotal * 0.15;
   const grandTotal = subTotal + aprovlepta;
 
+  const matTotal = rows.reduce((a, r) => a + (r.costMat || 0), 0);
+  const labTotal = rows.reduce((a, r) => a + (r.costLab || 0), 0);
+
   return {
     groups, meletiTotal, prosforaTotal, Em, lower, upper,
     allAcceptable: groups.every((g) => g.acceptable),
     geoe, subTotal, aprovlepta, grandTotal,
+    costTotal: matTotal + labTotal, matTotal, labTotal,
   };
 }
 
