@@ -14,6 +14,24 @@ const cleanGroup = (s: string) => s.replace(/^\s*\d+[.)]\s*/, "").replace(/[-–
  * Στήλες: B=περιγραφή, C=κωδ.άρθρου, D=κωδ.αναθ., F=μονάδα, G=ποσότητα, H=τιμή.
  * Οι γραμμές-τίτλοι ομάδας (χωρίς ποσότητα) ορίζουν την τρέχουσα ομάδα.
  */
+/** Μετατρέπει το JSON του `extract-budget` (από μελέτη ΕΣΗΔΗΣ) σε BudgetRow[]. */
+export function parseExtractedJson(text: string): BudgetRow[] {
+  const data = JSON.parse(text);
+  const rows = Array.isArray(data) ? data : data.rows ?? [];
+  return rows.map((r: any): BudgetRow => {
+    const qty = Number(r.qty) || 0;
+    const dapani = Number(r.dapani) || 0;
+    // εξασφάλιση qty×price = δαπάνη
+    const price = qty > 0 ? dapani / qty : Number(r.price) || 0;
+    const revCode = str(r.revCode);
+    return {
+      id: uid(), desc: str(r.desc), articleCode: str(r.articleCode), revCode,
+      unit: str(r.unit), qty, price, group: str(r.group) || "ΛΟΙΠΑ",
+      section: revCode ? sectionOf(revCode) : "ΟΙΚ", costMat: 0, costLab: 0,
+    };
+  });
+}
+
 export function parseFatherXlsx(wb: xlsx.WorkBook): BudgetRow[] {
   const rows: BudgetRow[] = [];
   for (const name of wb.SheetNames) {

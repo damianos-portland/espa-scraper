@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as xlsx from "xlsx";
 import { ANATH, resolve } from "@/lib/anatheorisi";
 import { type BudgetRow, calcBudget, dapani, eur, myCost, pct, sectionOf } from "@/lib/budget";
-import { parseFatherXlsx } from "@/lib/budget-import";
+import { parseExtractedJson, parseFatherXlsx } from "@/lib/budget-import";
 import { evaluate } from "@/lib/evaluator";
 
 const KEY = "espa-radar-budget-v1";
@@ -47,11 +47,12 @@ export default function BudgetBuilder() {
   const addRow = () => setRows((rs) => [...rs, mk({ group: rs.at(-1)?.group ?? "ΝΕΑ ΟΜΑΔΑ" })]);
   const del = (id: string) => setRows((rs) => rs.filter((r) => r.id !== id));
 
-  async function importXlsx(file: File) {
+  async function importFile(file: File) {
     try {
-      const wb = xlsx.read(await file.arrayBuffer());
-      const imported = parseFatherXlsx(wb);
-      if (!imported.length) return alert("Δεν βρέθηκαν άρθρα. Περίμενα φύλλα «ΠΡΟΥΠΟΛΟΓΙΣΜΟΣ …» στη μορφή του πατέρα.");
+      const imported = file.name.toLowerCase().endsWith(".json")
+        ? parseExtractedJson(await file.text())
+        : parseFatherXlsx(xlsx.read(await file.arrayBuffer()));
+      if (!imported.length) return alert("Δεν βρέθηκαν άρθρα στο αρχείο.");
       setRows(imported);
       setDiscounts({});
     } catch (e) {
@@ -103,8 +104,8 @@ export default function BudgetBuilder() {
       {/* toolbar */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <button onClick={addRow} className="rounded-xl bg-navy px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-ink">+ Άρθρο</button>
-        <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importXlsx(f); e.target.value = ""; }} />
-        <button onClick={() => fileRef.current?.click()} className="rounded-xl bg-white px-3 py-1.5 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">⬆ Import xls</button>
+        <input ref={fileRef} type="file" accept=".xlsx,.xls,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importFile(f); e.target.value = ""; }} />
+        <button onClick={() => fileRef.current?.click()} className="rounded-xl bg-white px-3 py-1.5 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300" title="xls του πατέρα ή JSON από npm run extract-budget">⬆ Import (xls / ΕΣΗΔΗΣ)</button>
         <button onClick={() => { setRows(SAMPLE.map((r) => ({ ...r, id: uid() }))); setDiscounts({}); }} className="rounded-xl bg-white px-3 py-1.5 text-[13px] font-medium text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300">Φόρτωση παραδείγματος</button>
         <button onClick={exportXlsx} disabled={!rows.length} className="rounded-xl bg-emerald-600 px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">⬇ Export Excel</button>
         {rows.length ? <button onClick={() => { setRows([]); setDiscounts({}); }} className="text-[12px] font-medium text-rose-600 hover:underline">καθαρισμός</button> : null}

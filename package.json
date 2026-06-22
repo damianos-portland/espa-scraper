@@ -10,6 +10,7 @@
     "match": "tsx src/match.ts",
     "export": "tsx src/export.ts",
     "anatheorisi:build": "tsx src/anatheorisi-build.ts",
+    "extract-budget": "tsx src/extract-budget.ts",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "postinstall": "playwright install chromium"
@@ -17,6 +18,7 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^4.0.379",
     "playwright": "^1.48.0",
     "xlsx": "^0.18.5"
   },
